@@ -2,11 +2,15 @@ package rxgo
 
 import (
 	"iter"
-
-	"golang.org/x/exp/constraints"
 )
 
-func Range[T constraints.Integer](start, count T) Observable[T] {
+type Number interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 |
+		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
+		~float32 | ~float64
+}
+
+func Range[T Number](start, count T) Observable[T] {
 	return func(yield func(T, error) bool) {
 		for ; start < count; start++ {
 			if !yield(start, nil) {
@@ -16,7 +20,7 @@ func Range[T constraints.Integer](start, count T) Observable[T] {
 	}
 }
 
-func Min[T constraints.Ordered]() OperatorFunc[T, T] {
+func Min[T Number]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return func(yield func(T, error) bool) {
 			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
@@ -52,7 +56,7 @@ func Min[T constraints.Ordered]() OperatorFunc[T, T] {
 	}
 }
 
-func Max[T constraints.Ordered]() OperatorFunc[T, T] {
+func Max[T Number]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return func(yield func(T, error) bool) {
 			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
