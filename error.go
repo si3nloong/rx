@@ -1,39 +1,8 @@
 package rxgo
 
 import (
-	"errors"
 	"iter"
 )
-
-var ErrEmpty = errors.New(`rxgo: empty value`)
-var ErrNotFound = errors.New(`rxgo: no values match`)
-
-type Either[T1, T2 any] struct {
-	v any
-}
-
-func (a Either[T1, T2]) Type1() (T1, bool) {
-	if v, ok := a.v.(T1); ok {
-		return v, true
-	}
-	var zero T1
-	return zero, false
-}
-
-func (a Either[T1, T2]) Type2() (T2, bool) {
-	if v, ok := a.v.(T2); ok {
-		return v, true
-	}
-	var zero T2
-	return zero, false
-}
-
-func (a Either[T1, T2]) MustType1() T1 {
-	return a.v.(T1)
-}
-func (a Either[T1, T2]) MustType2() T2 {
-	return a.v.(T2)
-}
 
 func CatchError[I, O any](fn func(error) Observable[O]) OperatorFunc[I, Either[I, O]] {
 	return func(input Observable[I]) Observable[Either[I, O]] {
@@ -73,10 +42,36 @@ func CatchError[I, O any](fn func(error) Observable[O]) OperatorFunc[I, Either[I
 	}
 }
 
-func ThrowError[T any](fn func() error) Observable[T] {
-	return func(yield func(T, error) bool) {
-		var v T
-		yield(v, fn())
+func Retry[T any](count uint) OperatorFunc[T, T] {
+	return func(input Observable[T]) Observable[T] {
+		return func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+			defer stop()
+
+			var retryCount uint
+
+			for {
+				v, err, ok := next()
+				if err != nil {
+					// Retry if error
+					if retryCount < count {
+						stop()
+						next, stop = iter.Pull2((iter.Seq2[T, error])(input))
+						retryCount++
+					} else {
+						var zero T
+						yield(zero, err)
+						return
+					}
+				} else if !ok {
+					return
+				} else {
+					if !yield(v, nil) {
+						return
+					}
+				}
+			}
+		}
 	}
 }
 

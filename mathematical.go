@@ -4,18 +4,57 @@ import (
 	"iter"
 )
 
-type Number interface {
-	~int | ~int8 | ~int16 | ~int32 | ~int64 |
-		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
-		~float32 | ~float64
-}
-
 func Range[T Number](start, count T) Observable[T] {
 	return func(yield func(T, error) bool) {
 		for ; start < count; start++ {
 			if !yield(start, nil) {
 				return
 			}
+		}
+	}
+}
+
+func Count[T Number](predicate ...func(value T, index int) bool) OperatorFunc[T, T] {
+	return func(input Observable[T]) Observable[T] {
+		return func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+			defer stop()
+
+			var count T
+			if len(predicate) > 0 {
+				var i int
+				fn := predicate[0]
+
+				for {
+					v, err, ok := next()
+					if err != nil {
+						var zero T
+						yield(zero, err)
+						return
+					} else if !ok {
+						break
+					} else {
+						if fn(v, i) {
+							count++
+						}
+						i++
+					}
+				}
+			} else {
+				for {
+					if _, err, ok := next(); err != nil {
+						var zero T
+						yield(zero, err)
+						return
+					} else if !ok {
+						break
+					} else {
+						count++
+					}
+				}
+			}
+
+			yield(count, nil)
 		}
 	}
 }
@@ -88,6 +127,36 @@ func Max[T Number]() OperatorFunc[T, T] {
 			if !yield(maxValue, nil) {
 				return
 			}
+		}
+	}
+}
+
+func Reduce[V, A any](accumulator func(acc A, value V, index int) A, seed A) OperatorFunc[V, A] {
+	return func(input Observable[V]) Observable[A] {
+		return func(yield func(A, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[V, error])(input))
+			defer stop()
+
+			var (
+				acc = seed
+				i   int
+			)
+
+			for {
+				v, err, ok := next()
+				if err != nil {
+					var zero A
+					yield(zero, err)
+					return
+				} else if !ok {
+					break
+				} else {
+					acc = accumulator(acc, v, i)
+					i++
+				}
+			}
+
+			yield(acc, nil)
 		}
 	}
 }
