@@ -1,5 +1,7 @@
 package rxgo
 
+import "time"
+
 type Either[T1, T2 any] struct {
 	v any
 }
@@ -35,7 +37,16 @@ type Tuple[A, B any] struct {
 func (t Tuple[A, B]) Left() A {
 	return t.a
 }
-
 func (t Tuple[A, B]) Right() B {
 	return t.b
+}
+
+type TimeInterval[T any] struct {
+	Interval time.Duration
+	Value    T
+}
+
+type Timestamp[T any] struct {
+	Time  time.Time
+	Value T
 }

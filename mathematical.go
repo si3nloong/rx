@@ -6,7 +6,7 @@ import (
 
 func Range[T Number](start, count T) Observable[T] {
 	return func(yield func(T, error) bool) {
-		for ; start < count; start++ {
+		for ; start <= count; start++ {
 			if !yield(start, nil) {
 				return
 			}

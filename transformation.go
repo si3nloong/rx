@@ -248,3 +248,68 @@ func MergeMap[T any](fn func(v T, index int) Observable[T]) OperatorFunc[T, T] {
 		}
 	}
 }
+
+func Pairwise[T any]() OperatorFunc[T, [2]T] {
+	return func(input Observable[T]) Observable[[2]T] {
+		return func(yield func([2]T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+			defer stop()
+
+			var n int
+			var pair [2]T
+
+			for {
+				v, err, ok := next()
+				if err != nil {
+					var zero [2]T
+					yield(zero, err)
+					return
+				} else if !ok {
+					return
+				} else {
+					if n%2 == 0 {
+						pair[1] = v
+						if !yield(pair, nil) {
+							return
+						}
+						pair = [2]T{}
+					} else {
+						pair[0] = v
+					}
+					n++
+				}
+			}
+		}
+	}
+}
+
+func Scan[V, A any](accumulator func(acc A, value V, index int) A, seed A) OperatorFunc[V, A] {
+	return func(input Observable[V]) Observable[A] {
+		return func(yield func(A, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[V, error])(input))
+			defer stop()
+
+			var (
+				acc = seed
+				i   int
+			)
+
+			for {
+				v, err, ok := next()
+				if err != nil {
+					var zero A
+					yield(zero, err)
+					return
+				} else if !ok {
+					break
+				} else {
+					acc = accumulator(acc, v, i)
+					if !yield(acc, nil) {
+						return
+					}
+					i++
+				}
+			}
+		}
+	}
+}

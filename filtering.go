@@ -1,9 +1,64 @@
 package rxgo
 
 import (
+	"context"
 	"iter"
 	"reflect"
+	"time"
 )
+
+func DebounceTime[T any](duration time.Duration) OperatorFunc[T, T] {
+	return func(input Observable[T]) Observable[T] {
+		return func(yield func(T, error) bool) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			ch := make(chan state[T], 1)
+			defer close(ch)
+
+			go func() {
+				next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+				defer stop()
+
+				for {
+					v, err, ok := next()
+					select {
+					case <-ctx.Done():
+						return
+					case ch <- state[T]{v, err, ok}:
+					}
+				}
+			}()
+
+			var latestValue T
+			var emitted bool
+			for {
+				select {
+				case <-time.After(duration):
+					if emitted {
+						if !yield(latestValue, nil) {
+							return
+						}
+						emitted = false
+					}
+				case r := <-ch:
+					if r.err != nil {
+						cancel()
+						var zero T
+						yield(zero, r.err)
+						return
+					} else if !r.ok {
+						cancel()
+						return
+					} else {
+						latestValue = r.v
+						emitted = true
+					}
+				}
+			}
+		}
+	}
+}
 
 func DistinctUntilChanged[T any](comparator ...func(prev, curr T) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {

@@ -12,11 +12,12 @@ func Of[T any](items []T) Observable[T] {
 	}
 }
 
-func Interval(d time.Duration) Observable[int] {
+func Interval(duration time.Duration) Observable[int] {
 	return func(yield func(int, error) bool) {
 		var i int
+
 		for {
-			<-time.After(d)
+			<-time.After(duration)
 			if !yield(i, nil) {
 				return
 			}
@@ -25,8 +26,8 @@ func Interval(d time.Duration) Observable[int] {
 	}
 }
 
-func Empty() Observable[any] {
-	return func(yield func(any, error) bool) {}
+func Empty[T any]() Observable[T] {
+	return func(yield func(T, error) bool) {}
 }
 
 func ThrowError[T any](fn func() error) Observable[T] {
@@ -38,16 +39,7 @@ func ThrowError[T any](fn func() error) Observable[T] {
 
 func Timer(duration time.Duration) Observable[int] {
 	return func(yield func(int, error) bool) {
-		t := time.NewTimer(duration)
-		defer t.Stop()
-
-		var i int
-		for {
-			<-t.C
-			if !yield(i, nil) {
-				return
-			}
-			i++
-		}
+		<-time.After(duration)
+		yield(0, nil)
 	}
 }
