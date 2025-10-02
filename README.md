@@ -25,41 +25,20 @@ package main
 
 import (
 	"log"
-	"math/rand/v2"
-	"time"
 
 	"github.com/si3nloong/rxgo"
 )
 
 func main() {
-    rxgo.Pipe4(
-		rxgo.Interval(time.Second),
-		rxgo.Tap(func(v int) {
-			println(v)
-		}),
-		rxgo.Buffer[int](func(yield func(int, error) bool) {
-			const (
-				min = 2
-				max = 10
-			)
-
-			for {
-				d := time.Second * time.Duration(rand.IntN(max-min)+min)
-				println(d.String())
-				<-time.After(d)
-				if !yield(0, nil) {
-					return
-				}
-			}
-		}),
-		rxgo.Take[[]int](3),
-		rxgo.Delay[[]int](time.Second),
+    rxgo.Pipe2(
+		rxgo.Of([]int{1, 1, 1, 2, 2, 2, 1, 1, 3, 3}),
+		rxgo.DistinctUntilChanged[int](),
+		rxgo.ToSlice[int](),
 	).Subscribe(func(v []int) {
-		log.Println("Next ->", v)
-	}, func(err error) {
-		log.Println("Error ->", err)
-	}, func() {
-        log.Println("Completed!")
-    })
+		log.Println(v)
+	}, func(err error) {}, func() {
+		println("Completed!")
+	})
+    // 1, 2, 1, 3, Completed!
 }
 ```
