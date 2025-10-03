@@ -17,7 +17,7 @@ func Range[T Number](start, count T) Observable[T] {
 func Count[T Number](predicate ...func(value T, index int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			var count T
@@ -62,7 +62,7 @@ func Count[T Number](predicate ...func(value T, index int) bool) OperatorFunc[T,
 func Min[T Number]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			minValue, err, ok := next()
@@ -98,7 +98,7 @@ func Min[T Number]() OperatorFunc[T, T] {
 func Max[T Number]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			maxValue, err, ok := next()
@@ -134,7 +134,7 @@ func Max[T Number]() OperatorFunc[T, T] {
 func Reduce[V, A any](accumulator func(acc A, value V, index int) A, seed A) OperatorFunc[V, A] {
 	return func(input Observable[V]) Observable[A] {
 		return (ObservableFunc[A])(func(yield func(A, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[V, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			var (

@@ -58,9 +58,8 @@ func CatchError2[I, O any](selector func(error) Observable[O]) OperatorFunc[I, E
 					for {
 						v2, err2, ok2 := next2()
 						if err2 != nil {
-							if !yield(Either[I, O]{}, err2) {
-								return
-							}
+							yield(Either[I, O]{}, err2)
+							return
 						} else if !ok2 {
 							return
 						} else {
@@ -81,19 +80,21 @@ func CatchError2[I, O any](selector func(error) Observable[O]) OperatorFunc[I, E
 	}
 }
 
-func Retry[T any](count uint) OperatorFunc[T, T] {
+func Retry[T any](count int) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
-			var retryCount uint
-
+			var retryCount int
 			for {
 				v, err, ok := next()
+				// Retry when it hit error
 				if err != nil {
-					// Retry if error
-					if retryCount < count {
+					if count < 0 /* Infinite retry */ {
+						stop()
+						next, stop = iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+					} else if retryCount < count {
 						stop()
 						next, stop = iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 						retryCount++
@@ -117,16 +118,10 @@ func Retry[T any](count uint) OperatorFunc[T, T] {
 func ThrowIfEmpty[T comparable](fn ...func() error) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
-			defer stop()
-
 			var emptyValue T
-			for {
-				v, err, ok := next()
+			for v, err := range input.Subscribe() {
 				if err != nil {
 					yield(v, err)
-					return
-				} else if !ok {
 					return
 				} else {
 					if v == emptyValue {

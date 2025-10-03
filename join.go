@@ -1,9 +1,5 @@
 package rxgo
 
-import (
-	"iter"
-)
-
 func StartWith[T any](values ...T) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -14,15 +10,9 @@ func StartWith[T any](values ...T) OperatorFunc[T, T] {
 				values = values[1:]
 			}
 
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
-			defer stop()
-
-			for {
-				v, err, ok := next()
+			for v, err := range input.Subscribe() {
 				if err != nil {
 					yield(v, err)
-					return
-				} else if !ok {
 					return
 				} else {
 					if !yield(v, nil) {

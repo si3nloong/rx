@@ -11,16 +11,9 @@ func Delay[T any](duration time.Duration) OperatorFunc[T, T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
 			<-time.After(duration)
 
-			next, stop := iter.Pull2(input.Subscribe())
-			defer stop()
-
-			for {
-				v, err, ok := next()
+			for v, err := range input.Subscribe() {
 				if err != nil {
-					var zero T
-					yield(zero, err)
-					return
-				} else if !ok {
+					yield(v, err)
 					return
 				} else {
 					if !yield(v, nil) {
@@ -35,17 +28,9 @@ func Delay[T any](duration time.Duration) OperatorFunc[T, T] {
 func Tap[T any](fn func(T)) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2(input.Subscribe())
-			defer stop()
-
-			var i int
-			for {
-				v, err, ok := next()
+			for v, err := range input.Subscribe() {
 				if err != nil {
-					var zero T
-					yield(zero, err)
-					return
-				} else if !ok {
+					yield(v, err)
 					return
 				} else {
 					fn(v)
@@ -53,7 +38,6 @@ func Tap[T any](fn func(T)) OperatorFunc[T, T] {
 						return
 					}
 				}
-				i++
 			}
 		})
 	}
@@ -62,17 +46,10 @@ func Tap[T any](fn func(T)) OperatorFunc[T, T] {
 func WithTimeInterval[T any]() OperatorFunc[T, TimeInterval[T]] {
 	return func(input Observable[T]) Observable[TimeInterval[T]] {
 		return (ObservableFunc[TimeInterval[T]])(func(yield func(TimeInterval[T], error) bool) {
-			next, stop := iter.Pull2(input.Subscribe())
-			defer stop()
-
 			startFrom := time.Now().UTC()
-
-			for {
-				v, err, ok := next()
+			for v, err := range input.Subscribe() {
 				if err != nil {
 					yield(TimeInterval[T]{}, err)
-					return
-				} else if !ok {
 					return
 				} else {
 					if !yield(TimeInterval[T]{Interval: time.Since(startFrom), Value: v}, nil) {
@@ -87,15 +64,9 @@ func WithTimeInterval[T any]() OperatorFunc[T, TimeInterval[T]] {
 func WithTimestamp[T any]() OperatorFunc[T, Timestamp[T]] {
 	return func(input Observable[T]) Observable[Timestamp[T]] {
 		return (ObservableFunc[Timestamp[T]])(func(yield func(Timestamp[T], error) bool) {
-			next, stop := iter.Pull2(input.Subscribe())
-			defer stop()
-
-			for {
-				v, err, ok := next()
+			for v, err := range input.Subscribe() {
 				if err != nil {
 					yield(Timestamp[T]{}, err)
-					return
-				} else if !ok {
 					return
 				} else {
 					if !yield(Timestamp[T]{Time: time.Now().UTC(), Value: v}, nil) {

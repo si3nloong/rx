@@ -22,7 +22,7 @@ func CombineLatest[T any](inputs ...Observable[T]) Observable[[]T] {
 		for i := range inputs {
 			wg.Go(func(index int, input Observable[T]) func() {
 				return func() {
-					next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+					next, stop := iter.Pull2(input.Subscribe())
 					defer stop()
 
 					for {
@@ -76,7 +76,7 @@ func Concat[T any](inputs ...Observable[T]) Observable[T] {
 	}
 	return (ObservableFunc[T])(func(yield func(T, error) bool) {
 		for len(inputs) > 0 {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(inputs[0].Subscribe()))
+			next, stop := iter.Pull2(inputs[0].Subscribe())
 
 		innerLoop:
 			for {
@@ -112,7 +112,7 @@ func ForkJoin[T any](inputs ...Observable[T]) Observable[[]T] {
 		for i, v := range inputs {
 			g.Go(func(index int, input Observable[T]) func() error {
 				return func() error {
-					next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+					next, stop := iter.Pull2(input.Subscribe())
 					defer stop()
 
 					for {
