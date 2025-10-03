@@ -93,10 +93,10 @@ func Retry[T any](count int) OperatorFunc[T, T] {
 				if err != nil {
 					if count < 0 /* Infinite retry */ {
 						stop()
-						next, stop = iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+						next, stop = iter.Pull2(input.Subscribe())
 					} else if retryCount < count {
 						stop()
-						next, stop = iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+						next, stop = iter.Pull2(input.Subscribe())
 						retryCount++
 					} else {
 						var zero T

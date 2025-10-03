@@ -4,16 +4,6 @@ import (
 	"iter"
 )
 
-func Range[T Number](start, count T) Observable[T] {
-	return (ObservableFunc[T])(func(yield func(T, error) bool) {
-		for ; start <= count; start++ {
-			if !yield(start, nil) {
-				return
-			}
-		}
-	})
-}
-
 func Count[T Number](predicate ...func(value T, index int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {

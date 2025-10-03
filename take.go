@@ -8,7 +8,7 @@ import (
 func Take[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			var takeCount uint
@@ -37,7 +37,7 @@ func Take[T any](count uint) OperatorFunc[T, T] {
 func TakeLast[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			result := make([]T, 0, count)
@@ -70,7 +70,7 @@ func TakeLast[T any](count uint) OperatorFunc[T, T] {
 func TakeWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			var i int
@@ -102,7 +102,7 @@ func TakeUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 			defer cancel()
 
 			go func() {
-				next, stop := iter.Pull2((iter.Seq2[U, error])(notifier.Subscribe()))
+				next, stop := iter.Pull2(notifier.Subscribe())
 				defer stop()
 
 				for {
@@ -122,7 +122,7 @@ func TakeUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 				}
 			}()
 
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			for {

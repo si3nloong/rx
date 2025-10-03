@@ -7,7 +7,7 @@ import (
 func Skip[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			var skipCount uint
@@ -35,7 +35,7 @@ func Skip[T any](count uint) OperatorFunc[T, T] {
 func SkipLast[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			result := make([]T, 0, count)
@@ -68,7 +68,7 @@ func SkipLast[T any](count uint) OperatorFunc[T, T] {
 func SkipWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			var i int
@@ -97,14 +97,14 @@ func SkipUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
 			ch := make(chan state[U], 1)
 			go func() {
-				next, stop := iter.Pull2((iter.Seq2[U, error])(notifier.Subscribe()))
+				next, stop := iter.Pull2(notifier.Subscribe())
 				defer stop()
 
 				v, err, ok := next()
 				ch <- state[U]{0, v, err, ok}
 			}()
 
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			for {

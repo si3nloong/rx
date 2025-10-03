@@ -5,14 +5,30 @@ import (
 	"time"
 )
 
-func Of[T any](items []T) Observable[T] {
+func Defer[T any](observableFactory func() Observable[T]) Observable[T] {
 	return (ObservableFunc[T])(func(yield func(T, error) bool) {
-		for _, v := range items {
-			if !yield(v, nil) {
+		next, stop := iter.Pull2(observableFactory().Subscribe())
+		defer stop()
+
+		for {
+			v, err, ok := next()
+			if err != nil {
+				var zero T
+				yield(zero, err)
 				return
+			} else if !ok {
+				return
+			} else {
+				if !yield(v, nil) {
+					return
+				}
 			}
 		}
 	})
+}
+
+func Empty[T any]() Observable[T] {
+	return (ObservableFunc[T])(func(yield func(T, error) bool) {})
 }
 
 func Interval(duration time.Duration) Observable[int] {
@@ -29,8 +45,24 @@ func Interval(duration time.Duration) Observable[int] {
 	})
 }
 
-func Empty[T any]() Observable[T] {
-	return (ObservableFunc[T])(func(yield func(T, error) bool) {})
+func Of[T any](items []T) Observable[T] {
+	return (ObservableFunc[T])(func(yield func(T, error) bool) {
+		for _, v := range items {
+			if !yield(v, nil) {
+				return
+			}
+		}
+	})
+}
+
+func Range[T Number](start, count T) Observable[T] {
+	return (ObservableFunc[T])(func(yield func(T, error) bool) {
+		for ; start <= count; start++ {
+			if !yield(start, nil) {
+				return
+			}
+		}
+	})
 }
 
 func ThrowError[T any](fn func() error) Observable[T] {

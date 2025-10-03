@@ -5,7 +5,7 @@ import "iter"
 func DefaultIfEmpty[T any](defaultValue T) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			var emitted bool
@@ -35,7 +35,7 @@ func DefaultIfEmpty[T any](defaultValue T) OperatorFunc[T, T] {
 func Every[T any](predicate func(T, int) bool) OperatorFunc[T, bool] {
 	return func(input Observable[T]) Observable[bool] {
 		return (ObservableFunc[bool])(func(yield func(bool, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			var i int
@@ -60,7 +60,7 @@ func Every[T any](predicate func(T, int) bool) OperatorFunc[T, bool] {
 func Find[T any](predicate func(T, int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			var i int
@@ -89,7 +89,7 @@ func Find[T any](predicate func(T, int) bool) OperatorFunc[T, T] {
 func FindIndex[T any](predicate func(T, int) bool) OperatorFunc[T, int] {
 	return func(input Observable[T]) Observable[int] {
 		return (ObservableFunc[int])(func(yield func(int, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			var i int
@@ -116,7 +116,7 @@ func FindIndex[T any](predicate func(T, int) bool) OperatorFunc[T, int] {
 func IsEmpty[T any]() OperatorFunc[T, bool] {
 	return func(input Observable[T]) Observable[bool] {
 		return (ObservableFunc[bool])(func(yield func(bool, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			var i int

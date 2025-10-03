@@ -149,7 +149,7 @@ func Merge[T any](inputs ...Observable[T]) Observable[T] {
 		for i, v := range inputs {
 			g.Go(func(index int, input Observable[T]) func() error {
 				return func() error {
-					next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+					next, stop := iter.Pull2(input.Subscribe())
 					defer stop()
 
 					for {
