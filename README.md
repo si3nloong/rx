@@ -12,11 +12,10 @@ An operator is a function that defines an Observable, how and when it should emi
 
 ## Why another RxGo?
 
-- The official [RxGo](https://github.com/ReactiveX/RxGo) library is not maintainable anymore.
-- Go generics by default.
+- The official [RxGo](https://github.com/ReactiveX/RxGo) library is no longer maintainable anymore.
+- Go generics by default, no reflection.
 - Utilise iterator pattern from Go which available since [Go 1.23](https://go.dev/blog/go1.23).
 - **Zero dependencies**, standard library only.
-
 
 ## Installation
 
@@ -26,17 +25,59 @@ go get -u github.com/si3nloong/rxgo
 
 ## Getting Started
 
-There is no magic under the hood, an observable is just a [Go iterator](https://go.dev/blog/range-functions) which comply to `iter.Seq2[T, error]`.
+There is no magic under the hood, an observable is just a [Go iterator](https://go.dev/blog/range-functions) which comply to [iter.Seq2[T, error]](https://pkg.go.dev/iter#Seq2) interface.
 
 You can create an Observable as easy as :
 
 ```go
-rxgo.ObservableFunc[string](func(yield func(string, error) bool) {
+observable := rxgo.ObservableFunc[string](func(yield func(string, error) bool) {
 	if !yield("hello", nil) {
 		return
 	}
 })
 ```
+
+Once the Observable is created, we can observe it using the `Subscribe` or `SubscribeOn` function. By default, an Observable is lazy in the sense that it emits items only once a subscription is made.
+
+Since it is a Go iterator, you can observe it using push method with `range` keyword:
+
+```go
+for v, err := range observable.Subscribe() {
+	if err != nil {
+		panic(err)
+	}
+	println(v)
+}
+```
+
+OR we can observe it using pull method with [iter.Pull2](https://pkg.go.dev/iter#Pull2) function:
+
+```go
+next, stop := iter.Pull2(observable.Subscribe())
+defer stop()
+
+for {
+	v, err, ok := next()
+	if err != nil {
+		panic(err)
+	} else if !ok {
+		println("Completed!")
+		return
+	} else {
+		println(v)
+	}
+}
+```
+
+## Observable Types
+
+### Hot vs. Cold Observables
+
+In the Rx world, there is a distinction between cold and hot Observables. When the data is produced by the Observable itself, it is a cold Observable. When the data is produced outside the Observable, it is a hot Observable. Usually, when we don't want to create a producer over and over again, we favour a hot Observable.
+
+In RxGo, there is a similar concept.
+
+## Advanced
 
 ```go
 package main
@@ -54,17 +95,14 @@ func main() {
 		rxgo.ToSlice[int](),
 	).Subscribe(func(v []int) {
 		log.Println(v)
-	}, func(err error) {}, func() {
+	}, func(err error) {
+		println("Error ->", err)
+	}, func() {
 		println("Completed!")
 	})
     // 1, 2, 1, 3, Completed!
-}
-```
 
-## Advanced
-
-```go
-    rxgo.Pipe3(
+	rxgo.Pipe3(
         // Emit every one second
 		rxgo.Interval(time.Second),
 		rxgo.Filter(func(v int) bool {
@@ -74,7 +112,7 @@ func main() {
 		rxgo.Map2(func(v int, _ int) (int, error) {
 			if v > 10 {
                 // Throw error when value is greather than 10
-				return 0, errors.New(`stop la`)
+				return 0, errors.New("stop la!")
 			}
 			return v, nil
 		}),
@@ -84,14 +122,16 @@ func main() {
 		}),
 	).SubscribeOn(func(v rxgo.Either[int, string]) {
 		if v1, ok := v.A(); ok {
-			log.Println("Result ->", v1)
+			println("Result ->", v1)
 		} else {
-			log.Println("Result ->", v.MustB())
+			println("Result ->", v.MustB())
 		}
 	}, func(err error) {
-		log.Println("Error ->", err)
+		println("Error ->", err)
 	}, func() {
-        log.Println("Completed!")
+        println("Completed!")
     })
     // 0, 2, 4, 6, 8, 10, I, II, III, IV, V, Completed!
+}
 ```
+
