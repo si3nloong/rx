@@ -18,7 +18,25 @@ An operator is a function that defines an Observable, how and when it should emi
 - **Zero dependencies**, standard library only.
 
 
-## Examples
+## Installation
+
+```go
+go get -u github.com/si3nloong/rxgo
+```
+
+## Getting Started
+
+There is no magic under the hood, an observable is just a [Go iterator](https://go.dev/blog/range-functions) which comply to `iter.Seq2[T, error]`.
+
+You can create an Observable as easy as :
+
+```go
+rxgo.ObservableFunc[string](func(yield func(string, error) bool) {
+	if !yield("hello", nil) {
+		return
+	}
+})
+```
 
 ```go
 package main
