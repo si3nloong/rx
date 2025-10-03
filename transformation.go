@@ -8,7 +8,7 @@ import (
 
 func Buffer[T any, I any](closingNotifier Observable[I]) OperatorFunc[T, []T] {
 	return func(input Observable[T]) Observable[[]T] {
-		return func(yield func([]T, error) bool) {
+		return (ObservableFunc[[]T])(func(yield func([]T, error) bool) {
 			var (
 				buffer = make([]T, 0)
 				rw     sync.RWMutex
@@ -18,7 +18,7 @@ func Buffer[T any, I any](closingNotifier Observable[I]) OperatorFunc[T, []T] {
 			defer cancel()
 
 			go func() {
-				next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+				next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 				defer stop()
 
 				for {
@@ -41,7 +41,7 @@ func Buffer[T any, I any](closingNotifier Observable[I]) OperatorFunc[T, []T] {
 				}
 			}()
 
-			next, stop := iter.Pull2((iter.Seq2[I, error])(closingNotifier))
+			next, stop := iter.Pull2((iter.Seq2[I, error])(closingNotifier.Subscribe()))
 			defer stop()
 
 			for {
@@ -62,14 +62,42 @@ func Buffer[T any, I any](closingNotifier Observable[I]) OperatorFunc[T, []T] {
 					rw.Unlock()
 				}
 			}
-		}
+		})
+	}
+}
+
+func BufferCount[T any](count uint) OperatorFunc[T, []T] {
+	return func(input Observable[T]) Observable[[]T] {
+		return (ObservableFunc[[]T])(func(yield func([]T, error) bool) {
+			buffer := make([]T, 0, count)
+			for v, err := range input.Subscribe() {
+				if err != nil {
+					yield(nil, err)
+					return
+				} else {
+					buffer = append(buffer, v)
+					if (uint)(len(buffer)) >= count {
+						if !yield(buffer, nil) {
+							return
+						}
+						buffer = make([]T, 0, count)
+					}
+				}
+			}
+			if len(buffer) > 0 {
+				if !yield(buffer, nil) {
+					return
+				}
+				clear(buffer)
+			}
+		})
 	}
 }
 
 func Map[I, O any](fn func(v I, index int) O) OperatorFunc[I, O] {
 	return func(input Observable[I]) Observable[O] {
-		return func(yield func(O, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[I, error])(input))
+		return (ObservableFunc[O])(func(yield func(O, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[I, error])(input.Subscribe()))
 			defer stop()
 
 			var i int
@@ -88,14 +116,14 @@ func Map[I, O any](fn func(v I, index int) O) OperatorFunc[I, O] {
 				}
 				i++
 			}
-		}
+		})
 	}
 }
 
 func Map2[I, O any](fn func(v I, index int) (O, error)) OperatorFunc[I, O] {
 	return func(input Observable[I]) Observable[O] {
-		return func(yield func(O, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[I, error])(input))
+		return (ObservableFunc[O])(func(yield func(O, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[I, error])(input.Subscribe()))
 			defer stop()
 
 			var i int
@@ -119,14 +147,14 @@ func Map2[I, O any](fn func(v I, index int) (O, error)) OperatorFunc[I, O] {
 				}
 				i++
 			}
-		}
+		})
 	}
 }
 
 func ConcatMap[I, O any](project func(v I, index int) Observable[O]) OperatorFunc[I, O] {
 	return func(input Observable[I]) Observable[O] {
-		return func(yield func(O, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[I, error])(input))
+		return (ObservableFunc[O])(func(yield func(O, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[I, error])(input.Subscribe()))
 			defer stop()
 
 			var i int
@@ -139,7 +167,7 @@ func ConcatMap[I, O any](project func(v I, index int) Observable[O]) OperatorFun
 				} else if !ok {
 					return
 				} else {
-					next2, stop2 := iter.Pull2((iter.Seq2[O, error])(project(v, i)))
+					next2, stop2 := iter.Pull2((iter.Seq2[O, error])(project(v, i).Subscribe()))
 				loop2:
 					for {
 						v2, err2, ok2 := next2()
@@ -161,14 +189,14 @@ func ConcatMap[I, O any](project func(v I, index int) Observable[O]) OperatorFun
 				}
 				i++
 			}
-		}
+		})
 	}
 }
 
 func SwitchMap[I, O any](fn func(v I, index int) Observable[O]) OperatorFunc[I, O] {
 	return func(input Observable[I]) Observable[O] {
-		return func(yield func(O, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[I, error])(input))
+		return (ObservableFunc[O])(func(yield func(O, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[I, error])(input.Subscribe()))
 			defer stop()
 
 			var i int
@@ -182,12 +210,13 @@ func SwitchMap[I, O any](fn func(v I, index int) Observable[O]) OperatorFunc[I, 
 				} else if !ok {
 					return
 				} else {
-					next2, stop2 := iter.Pull2((iter.Seq2[O, error])(fn(v, i)))
+					next2, stop2 := iter.Pull2((iter.Seq2[O, error])(fn(v, i).Subscribe()))
 
 				loop2:
 					for {
 						v2, err2, ok2 := next2()
 						if err2 != nil {
+							stop2()
 							var zero O
 							yield(zero, err2)
 							return
@@ -195,6 +224,7 @@ func SwitchMap[I, O any](fn func(v I, index int) Observable[O]) OperatorFunc[I, 
 							break loop2
 						} else {
 							if !yield(v2, nil) {
+								stop2()
 								return
 							}
 						}
@@ -203,14 +233,14 @@ func SwitchMap[I, O any](fn func(v I, index int) Observable[O]) OperatorFunc[I, 
 				}
 				i++
 			}
-		}
+		})
 	}
 }
 
 func MergeMap[T any](fn func(v T, index int) Observable[T]) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
 			var i int
@@ -224,7 +254,7 @@ func MergeMap[T any](fn func(v T, index int) Observable[T]) OperatorFunc[T, T] {
 				} else if !ok {
 					return
 				} else {
-					next2, stop2 := iter.Pull2((iter.Seq2[T, error])(fn(v, i)))
+					next2, stop2 := iter.Pull2((iter.Seq2[T, error])(fn(v, i).Subscribe()))
 
 				loop2:
 					for {
@@ -245,14 +275,14 @@ func MergeMap[T any](fn func(v T, index int) Observable[T]) OperatorFunc[T, T] {
 				}
 				i++
 			}
-		}
+		})
 	}
 }
 
 func Pairwise[T any]() OperatorFunc[T, [2]T] {
 	return func(input Observable[T]) Observable[[2]T] {
-		return func(yield func([2]T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[[2]T])(func(yield func([2]T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
 			var n int
@@ -279,21 +309,20 @@ func Pairwise[T any]() OperatorFunc[T, [2]T] {
 					n++
 				}
 			}
-		}
+		})
 	}
 }
 
 func Scan[V, A any](accumulator func(acc A, value V, index int) A, seed A) OperatorFunc[V, A] {
 	return func(input Observable[V]) Observable[A] {
-		return func(yield func(A, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[V, error])(input))
+		return (ObservableFunc[A])(func(yield func(A, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[V, error])(input.Subscribe()))
 			defer stop()
 
 			var (
 				acc = seed
 				i   int
 			)
-
 			for {
 				v, err, ok := next()
 				if err != nil {
@@ -301,7 +330,7 @@ func Scan[V, A any](accumulator func(acc A, value V, index int) A, seed A) Opera
 					yield(zero, err)
 					return
 				} else if !ok {
-					break
+					return
 				} else {
 					acc = accumulator(acc, v, i)
 					if !yield(acc, nil) {
@@ -310,6 +339,6 @@ func Scan[V, A any](accumulator func(acc A, value V, index int) A, seed A) Opera
 					i++
 				}
 			}
-		}
+		})
 	}
 }

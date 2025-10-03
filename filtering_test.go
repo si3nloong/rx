@@ -11,7 +11,7 @@ func TestFiltering(t *testing.T) {
 			Of([]int{1, 1, 1, 2, 2, 2, 1, 1, 3, 3}),
 			DistinctUntilChanged[int](),
 			ToSlice[int](),
-		).Subscribe(func(v []int) {
+		).SubscribeOn(func(v []int) {
 			if !reflect.DeepEqual(v, []int{1, 2, 1, 3}) {
 				t.Failed()
 			}

@@ -4,11 +4,11 @@ import "iter"
 
 func DefaultIfEmpty[T any](defaultValue T) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
-			var i int
+			var emitted bool
 			for {
 				v, err, ok := next()
 				if err != nil {
@@ -16,7 +16,7 @@ func DefaultIfEmpty[T any](defaultValue T) OperatorFunc[T, T] {
 					yield(zero, err)
 					return
 				} else if !ok {
-					if i > 0 {
+					if emitted {
 						return
 					}
 					yield(defaultValue, nil)
@@ -25,17 +25,17 @@ func DefaultIfEmpty[T any](defaultValue T) OperatorFunc[T, T] {
 					if !yield(v, nil) {
 						return
 					}
-					i++
+					emitted = true
 				}
 			}
-		}
+		})
 	}
 }
 
 func Every[T any](predicate func(T, int) bool) OperatorFunc[T, bool] {
 	return func(input Observable[T]) Observable[bool] {
-		return func(yield func(bool, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[bool])(func(yield func(bool, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
 			var i int
@@ -53,14 +53,14 @@ func Every[T any](predicate func(T, int) bool) OperatorFunc[T, bool] {
 				}
 				i++
 			}
-		}
+		})
 	}
 }
 
 func Find[T any](predicate func(T, int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
 			var i int
@@ -82,14 +82,14 @@ func Find[T any](predicate func(T, int) bool) OperatorFunc[T, T] {
 				}
 				i++
 			}
-		}
+		})
 	}
 }
 
 func FindIndex[T any](predicate func(T, int) bool) OperatorFunc[T, int] {
 	return func(input Observable[T]) Observable[int] {
-		return func(yield func(int, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[int])(func(yield func(int, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
 			var i int
@@ -109,14 +109,14 @@ func FindIndex[T any](predicate func(T, int) bool) OperatorFunc[T, int] {
 				}
 				i++
 			}
-		}
+		})
 	}
 }
 
 func IsEmpty[T any]() OperatorFunc[T, bool] {
 	return func(input Observable[T]) Observable[bool] {
-		return func(yield func(bool, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[bool])(func(yield func(bool, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
 			var i int
@@ -125,7 +125,6 @@ func IsEmpty[T any]() OperatorFunc[T, bool] {
 					yield(false, err)
 					return
 				} else if !ok {
-					println("HERE OK", i)
 					if i > 0 {
 						yield(false, nil)
 					} else {
@@ -136,6 +135,6 @@ func IsEmpty[T any]() OperatorFunc[T, bool] {
 					i++
 				}
 			}
-		}
+		})
 	}
 }

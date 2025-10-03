@@ -4,10 +4,14 @@ import (
 	"iter"
 )
 
-type Observable[T any] iter.Seq2[T, error]
+type ObservableFunc[T any] iter.Seq2[T, error]
 
-func (o Observable[T]) Subscribe(onNext func(v T), onError func(err error), onComplete func()) {
-	next, stop := iter.Pull2((iter.Seq2[T, error])(o))
+func (fn ObservableFunc[T]) Subscribe() iter.Seq2[T, error] {
+	return (iter.Seq2[T, error])(fn)
+}
+
+func (fn ObservableFunc[T]) SubscribeOn(onNext func(v T), onError func(err error), onComplete func()) {
+	next, stop := iter.Pull2((iter.Seq2[T, error])(fn))
 	defer stop()
 
 	for {

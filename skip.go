@@ -2,15 +2,15 @@ package rxgo
 
 import (
 	"iter"
-	"time"
 )
 
 func Skip[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
+			var skipCount uint
 			for {
 				v, err, ok := next()
 				if err != nil {
@@ -20,19 +20,55 @@ func Skip[T any](count uint) OperatorFunc[T, T] {
 				} else if !ok {
 					return
 				} else {
+					skipCount++
+					if skipCount > count {
+						if !yield(v, nil) {
+							return
+						}
+					}
+				}
+			}
+		})
+	}
+}
+
+func SkipLast[T any](count uint) OperatorFunc[T, T] {
+	return func(input Observable[T]) Observable[T] {
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			defer stop()
+
+			result := make([]T, 0, count)
+		loop:
+			for {
+				v, err, ok := next()
+				if err != nil {
+					var zero T
+					yield(zero, err)
+					return
+				} else if !ok {
+					break loop
+				} else {
+					result = append(result, v)
+				}
+			}
+
+			if (uint)(len(result)) > count {
+				result = result[:count]
+				for _, v := range result {
 					if !yield(v, nil) {
 						return
 					}
 				}
 			}
-		}
+		})
 	}
 }
 
 func SkipWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
 			var i int
@@ -52,14 +88,23 @@ func SkipWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 				}
 				i++
 			}
-		}
+		})
 	}
 }
 
-func SkipUntil[T any](d time.Duration) OperatorFunc[T, T] {
+func SkipUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			ch := make(chan state[U], 1)
+			go func() {
+				next, stop := iter.Pull2((iter.Seq2[U, error])(notifier.Subscribe()))
+				defer stop()
+
+				v, err, ok := next()
+				ch <- state[U]{v, err, ok}
+			}()
+
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
 			for {
@@ -75,6 +120,6 @@ func SkipUntil[T any](d time.Duration) OperatorFunc[T, T] {
 					}
 				}
 			}
-		}
+		})
 	}
 }

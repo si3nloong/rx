@@ -37,7 +37,7 @@ func BenchmarkRx(b *testing.B) {
 				rxgo.Map(func(v int, _ int) string {
 					return "num" + strconv.Itoa(v)
 				}),
-			).Subscribe(
+			).SubscribeOn(
 				func(v string) {},
 				func(err error) {},
 				func() {},

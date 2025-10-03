@@ -2,31 +2,31 @@ package rxgo
 
 import "time"
 
-type Either[T1, T2 any] struct {
+type Either[A, B any] struct {
 	v any
 }
 
-func (a Either[T1, T2]) Type1() (T1, bool) {
-	if v, ok := a.v.(T1); ok {
+func (a Either[A, B]) A() (A, bool) {
+	if v, ok := a.v.(A); ok {
 		return v, true
 	}
-	var zero T1
+	var zero A
 	return zero, false
 }
 
-func (a Either[T1, T2]) Type2() (T2, bool) {
-	if v, ok := a.v.(T2); ok {
+func (a Either[A, B]) B() (B, bool) {
+	if v, ok := a.v.(B); ok {
 		return v, true
 	}
-	var zero T2
+	var zero B
 	return zero, false
 }
 
-func (a Either[T1, T2]) MustType1() T1 {
-	return a.v.(T1)
+func (a Either[A, B]) MustA() A {
+	return a.v.(A)
 }
-func (a Either[T1, T2]) MustType2() T2 {
-	return a.v.(T2)
+func (a Either[A, B]) MustB() B {
+	return a.v.(B)
 }
 
 type Tuple[A, B any] struct {

@@ -4,16 +4,55 @@ import (
 	"iter"
 )
 
-func CatchError[I, O any](fn func(error) Observable[O]) OperatorFunc[I, Either[I, O]] {
-	return func(input Observable[I]) Observable[Either[I, O]] {
-		return func(yield func(Either[I, O], error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[I, error])(input))
+func CatchError[T any](selector func(error) Observable[T]) OperatorFunc[T, T] {
+	return func(input Observable[T]) Observable[T] {
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			for {
 				v, err, ok := next()
 				if err != nil {
-					next2, stop2 := iter.Pull2((iter.Seq2[O, error])(fn(err)))
+					next2, stop2 := iter.Pull2(selector(err).Subscribe())
+					defer stop2()
+
+					for {
+						v2, err2, ok2 := next2()
+						if err2 != nil {
+							var zero T
+							if !yield(zero, err2) {
+								return
+							}
+						} else if !ok2 {
+							return
+						} else {
+							if !yield(v2, nil) {
+								return
+							}
+						}
+					}
+				} else if !ok {
+					return
+				} else {
+					if !yield(v, nil) {
+						return
+					}
+				}
+			}
+		})
+	}
+}
+
+func CatchError2[I, O any](selector func(error) Observable[O]) OperatorFunc[I, Either[I, O]] {
+	return func(input Observable[I]) Observable[Either[I, O]] {
+		return (ObservableFunc[Either[I, O]])(func(yield func(Either[I, O], error) bool) {
+			next, stop := iter.Pull2(input.Subscribe())
+			defer stop()
+
+			for {
+				v, err, ok := next()
+				if err != nil {
+					next2, stop2 := iter.Pull2(selector(err).Subscribe())
 					defer stop2()
 
 					for {
@@ -38,14 +77,14 @@ func CatchError[I, O any](fn func(error) Observable[O]) OperatorFunc[I, Either[I
 					}
 				}
 			}
-		}
+		})
 	}
 }
 
 func Retry[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
 			var retryCount uint
@@ -56,7 +95,7 @@ func Retry[T any](count uint) OperatorFunc[T, T] {
 					// Retry if error
 					if retryCount < count {
 						stop()
-						next, stop = iter.Pull2((iter.Seq2[T, error])(input))
+						next, stop = iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 						retryCount++
 					} else {
 						var zero T
@@ -71,14 +110,14 @@ func Retry[T any](count uint) OperatorFunc[T, T] {
 					}
 				}
 			}
-		}
+		})
 	}
 }
 
 func ThrowIfEmpty[T comparable](fn ...func() error) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
 			var emptyValue T
@@ -104,6 +143,6 @@ func ThrowIfEmpty[T comparable](fn ...func() error) OperatorFunc[T, T] {
 					}
 				}
 			}
-		}
+		})
 	}
 }

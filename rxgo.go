@@ -1,6 +1,9 @@
 package rxgo
 
-import "errors"
+import (
+	"errors"
+	"iter"
+)
 
 type Number interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 |
@@ -8,11 +11,17 @@ type Number interface {
 		~float32 | ~float64
 }
 
+type Observable[T any] interface {
+	Subscribe() iter.Seq2[T, error]
+	SubscribeOn(onNext func(T), onFailed func(error), onCompleted func())
+}
+
 type OperatorFunc[I any, O any] func(Observable[I]) Observable[O]
 
 var ErrEmpty = errors.New(`rxgo: empty value`)
 var ErrNotFound = errors.New(`rxgo: no values match`)
 var ErrTimeout = errors.New(`rxgo: timeout`)
+var ErrArgumentOutOfRange = errors.New(`rxgo: out of range`)
 
 type state[T any] struct {
 	v   T

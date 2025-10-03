@@ -7,8 +7,8 @@ import (
 
 func Take[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
 			var takeCount uint
@@ -30,25 +30,47 @@ func Take[T any](count uint) OperatorFunc[T, T] {
 					}
 				}
 			}
-		}
+		})
 	}
 }
 
 func TakeLast[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
-			next()
-		}
+			result := make([]T, 0, count)
+		loop:
+			for {
+				v, err, ok := next()
+				if err != nil {
+					var zero T
+					yield(zero, err)
+					return
+				} else if !ok {
+					break loop
+				} else {
+					result = append(result, v)
+					if (uint)(len(result)) > count {
+						result = result[1:]
+					}
+				}
+			}
+
+			for _, v := range result {
+				if !yield(v, nil) {
+					return
+				}
+			}
+		})
 	}
 }
 
 func TakeWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
 			var i int
@@ -69,57 +91,59 @@ func TakeWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 				}
 				i++
 			}
-		}
+		})
 	}
 }
 
-func TakeUntil[I, O any](notifier Observable[O]) OperatorFunc[I, I] {
-	return func(input Observable[I]) Observable[I] {
-		return func(yield func(I, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[I, error])(input))
-			defer stop()
-
-			next2, stop2 := iter.Pull2((iter.Seq2[O, error])(notifier))
-			defer stop2()
-
+func TakeUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
+	return func(input Observable[T]) Observable[T] {
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
 			go func() {
+				next, stop := iter.Pull2((iter.Seq2[U, error])(notifier.Subscribe()))
+				defer stop()
+
 				for {
-					if _, err, ok := next2(); err != nil {
+					select {
+					case <-ctx.Done():
 						return
-					} else if !ok {
-						return
-					} else {
-						cancel()
-						break
+					default:
+						if _, err, ok := next(); err != nil {
+							return
+						} else if !ok {
+							return
+						} else {
+							cancel()
+							return
+						}
 					}
 				}
 			}()
 
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
+			defer stop()
+
 			for {
-				select {
-				case <-ctx.Done():
-					stop2()
+				v, err, ok := next()
+				if err != nil {
+					var zero T
+					yield(zero, err)
 					return
-				default:
-					v, err, ok := next()
-					if err != nil {
-						stop2()
-						var zero I
-						yield(zero, err)
+				} else if !ok {
+					return
+				} else {
+					select {
+					case <-ctx.Done():
 						return
-					} else if !ok {
-						stop2()
-						return
-					} else {
+					default:
 						if !yield(v, nil) {
 							return
 						}
 					}
 				}
 			}
-		}
+		})
 	}
 }

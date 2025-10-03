@@ -8,10 +8,10 @@ import (
 
 func Delay[T any](duration time.Duration) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
 			<-time.After(duration)
 
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			for {
@@ -28,14 +28,14 @@ func Delay[T any](duration time.Duration) OperatorFunc[T, T] {
 					}
 				}
 			}
-		}
+		})
 	}
 }
 
 func Tap[T any](fn func(T)) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			var i int
@@ -55,14 +55,14 @@ func Tap[T any](fn func(T)) OperatorFunc[T, T] {
 				}
 				i++
 			}
-		}
+		})
 	}
 }
 
 func WithTimeInterval[T any]() OperatorFunc[T, TimeInterval[T]] {
 	return func(input Observable[T]) Observable[TimeInterval[T]] {
-		return func(yield func(TimeInterval[T], error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[TimeInterval[T]])(func(yield func(TimeInterval[T], error) bool) {
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			startFrom := time.Now().UTC()
@@ -73,21 +73,21 @@ func WithTimeInterval[T any]() OperatorFunc[T, TimeInterval[T]] {
 					yield(TimeInterval[T]{}, err)
 					return
 				} else if !ok {
-					break
+					return
 				} else {
 					if !yield(TimeInterval[T]{Interval: time.Since(startFrom), Value: v}, nil) {
 						return
 					}
 				}
 			}
-		}
+		})
 	}
 }
 
 func WithTimestamp[T any]() OperatorFunc[T, Timestamp[T]] {
 	return func(input Observable[T]) Observable[Timestamp[T]] {
-		return func(yield func(Timestamp[T], error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[Timestamp[T]])(func(yield func(Timestamp[T], error) bool) {
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			for {
@@ -96,21 +96,21 @@ func WithTimestamp[T any]() OperatorFunc[T, Timestamp[T]] {
 					yield(Timestamp[T]{}, err)
 					return
 				} else if !ok {
-					break
+					return
 				} else {
 					if !yield(Timestamp[T]{Time: time.Now().UTC(), Value: v}, nil) {
 						return
 					}
 				}
 			}
-		}
+		})
 	}
 }
 
 func Timeout[T any](duration time.Duration) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			ctx, cancel := context.WithTimeout(context.Background(), duration)
@@ -121,6 +121,7 @@ func Timeout[T any](duration time.Duration) OperatorFunc[T, T] {
 				v, err, ok := next()
 				select {
 				case <-ctx.Done():
+					return
 				case ch <- state[T]{v, err, ok}:
 					cancel()
 				}
@@ -160,31 +161,31 @@ func Timeout[T any](duration time.Duration) OperatorFunc[T, T] {
 					}
 				}
 			}
-		}
+		})
 	}
 }
 
 func ToSlice[T any]() OperatorFunc[T, []T] {
 	return func(input Observable[T]) Observable[[]T] {
-		return func(yield func([]T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[[]T])(func(yield func([]T, error) bool) {
+			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
 			result := make([]T, 0)
-
+		loop:
 			for {
 				v, err, ok := next()
 				if err != nil {
 					yield(nil, err)
 					return
 				} else if !ok {
-					break
+					break loop
 				} else {
 					result = append(result, v)
 				}
 			}
 
 			yield(result, nil)
-		}
+		})
 	}
 }

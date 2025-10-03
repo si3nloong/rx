@@ -42,3 +42,38 @@ func main() {
     // 1, 2, 1, 3, Completed!
 }
 ```
+
+## Advanced
+
+```go
+    rxgo.Pipe3(
+        // Emit every one second
+		rxgo.Interval(time.Second),
+		rxgo.Filter(func(v int) bool {
+            // Filter with modules
+			return v%2 == 0
+		}),
+		rxgo.Map2(func(v int, _ int) (int, error) {
+			if v > 10 {
+                // Throw error when value is greather than 10
+				return 0, errors.New(`stop la`)
+			}
+			return v, nil
+		}),
+        // Catch error and return new Observable
+		rxgo.CatchError2[int](func(err error) rxgo.Observable[string] {
+			return rxgo.Of([]string{"I", "II", "III", "IV", "V"})
+		}),
+	).SubscribeOn(func(v rxgo.Either[int, string]) {
+		if v1, ok := v.A(); ok {
+			log.Println("Result ->", v1)
+		} else {
+			log.Println("Result ->", v.MustB())
+		}
+	}, func(err error) {
+		log.Println("Error ->", err)
+	}, func() {
+        log.Println("Completed!")
+    })
+    // 0, 2, 4, 6, 8, 10, I, II, III, IV, V, Completed!
+```

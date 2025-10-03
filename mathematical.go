@@ -5,19 +5,19 @@ import (
 )
 
 func Range[T Number](start, count T) Observable[T] {
-	return func(yield func(T, error) bool) {
+	return (ObservableFunc[T])(func(yield func(T, error) bool) {
 		for ; start <= count; start++ {
 			if !yield(start, nil) {
 				return
 			}
 		}
-	}
+	})
 }
 
 func Count[T Number](predicate ...func(value T, index int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
 			var count T
@@ -55,14 +55,14 @@ func Count[T Number](predicate ...func(value T, index int) bool) OperatorFunc[T,
 			}
 
 			yield(count, nil)
-		}
+		})
 	}
 }
 
 func Min[T Number]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
 			minValue, err, ok := next()
@@ -91,14 +91,14 @@ func Min[T Number]() OperatorFunc[T, T] {
 			if !yield(minValue, nil) {
 				return
 			}
-		}
+		})
 	}
 }
 
 func Max[T Number]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
-		return func(yield func(T, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[T, error])(input))
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
 			defer stop()
 
 			maxValue, err, ok := next()
@@ -127,14 +127,14 @@ func Max[T Number]() OperatorFunc[T, T] {
 			if !yield(maxValue, nil) {
 				return
 			}
-		}
+		})
 	}
 }
 
 func Reduce[V, A any](accumulator func(acc A, value V, index int) A, seed A) OperatorFunc[V, A] {
 	return func(input Observable[V]) Observable[A] {
-		return func(yield func(A, error) bool) {
-			next, stop := iter.Pull2((iter.Seq2[V, error])(input))
+		return (ObservableFunc[A])(func(yield func(A, error) bool) {
+			next, stop := iter.Pull2((iter.Seq2[V, error])(input.Subscribe()))
 			defer stop()
 
 			var (
@@ -157,6 +157,6 @@ func Reduce[V, A any](accumulator func(acc A, value V, index int) A, seed A) Ope
 			}
 
 			yield(acc, nil)
-		}
+		})
 	}
 }
