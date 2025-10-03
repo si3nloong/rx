@@ -6,6 +6,14 @@ type Either[A, B any] struct {
 	v any
 }
 
+func NewA[A, B any](v A) Either[A, B] {
+	return Either[A, B]{v: v}
+}
+
+func NewB[A, B any](v B) Either[A, B] {
+	return Either[A, B]{v: v}
+}
+
 func (a Either[A, B]) A() (A, bool) {
 	if v, ok := a.v.(A); ok {
 		return v, true
@@ -29,16 +37,13 @@ func (a Either[A, B]) MustB() B {
 	return a.v.(B)
 }
 
-type Tuple[A, B any] struct {
-	a A
-	b B
+type Tuple[L, R any] struct {
+	Left  L
+	Right R
 }
 
-func (t Tuple[A, B]) Left() A {
-	return t.a
-}
-func (t Tuple[A, B]) Right() B {
-	return t.b
+func NewTuple[L, R any](left L, right R) Tuple[L, R] {
+	return Tuple[L, R]{left, right}
 }
 
 type TimeInterval[T any] struct {
