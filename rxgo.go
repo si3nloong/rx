@@ -24,6 +24,7 @@ var ErrTimeout = errors.New(`rxgo: timeout`)
 var ErrArgumentOutOfRange = errors.New(`rxgo: out of range`)
 
 type state[T any] struct {
+	idx int
 	v   T
 	err error
 	ok  bool

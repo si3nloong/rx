@@ -110,20 +110,25 @@ func WithTimestamp[T any]() OperatorFunc[T, Timestamp[T]] {
 func Timeout[T any](duration time.Duration) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2(input.Subscribe())
-			defer stop()
-
 			ctx, cancel := context.WithTimeout(context.Background(), duration)
 			defer cancel()
 
+			next, stop := iter.Pull2(input.Subscribe())
+			defer stop()
+
 			ch := make(chan state[T], 1)
+			defer close(ch)
+
 			go func() {
 				v, err, ok := next()
 				select {
 				case <-ctx.Done():
 					return
-				case ch <- state[T]{v, err, ok}:
+				case ch <- state[T]{0, v, err, ok}:
 					cancel()
+					if err != nil || !ok {
+						return
+					}
 				}
 			}()
 

@@ -25,7 +25,10 @@ func DebounceTime[T any](duration time.Duration) OperatorFunc[T, T] {
 					select {
 					case <-ctx.Done():
 						return
-					case ch <- state[T]{v, err, ok}:
+					case ch <- state[T]{0, v, err, ok}:
+						if err != nil || !ok {
+							return
+						}
 					}
 				}
 			}()

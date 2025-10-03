@@ -1,6 +1,6 @@
 module benchmarks
 
-go 1.23.0
+go 1.25.0
 
 require (
 	github.com/reactivex/rxgo/v2 v2.5.0
@@ -15,6 +15,9 @@ require (
 	github.com/stretchr/objx v0.1.0 // indirect
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/teivah/onecontext v0.0.0-20200513185103-40f981bfd775 // indirect
-	golang.org/x/exp v0.0.0-20250911091902-df9299821621 // indirect
+	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/tools v0.37.0 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 )
+
+replace github.com/si3nloong/rxgo => ../

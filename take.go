@@ -126,18 +126,18 @@ func TakeUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 			defer stop()
 
 			for {
-				v, err, ok := next()
-				if err != nil {
-					var zero T
-					yield(zero, err)
+				select {
+				case <-ctx.Done():
 					return
-				} else if !ok {
-					return
-				} else {
-					select {
-					case <-ctx.Done():
+				default:
+					v, err, ok := next()
+					if err != nil {
+						var zero T
+						yield(zero, err)
 						return
-					default:
+					} else if !ok {
+						return
+					} else {
 						if !yield(v, nil) {
 							return
 						}

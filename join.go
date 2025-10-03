@@ -1,6 +1,8 @@
 package rxgo
 
-import "iter"
+import (
+	"iter"
+)
 
 func StartWith[T any](values ...T) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {

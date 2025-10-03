@@ -15,7 +15,7 @@ An operator is a function that defines an Observable, how and when it should emi
 - The official [RxGo](https://github.com/ReactiveX/RxGo) library is not maintainable anymore.
 - Go generics by default.
 - Utilise iterator pattern from Go which available since [Go 1.23](https://go.dev/blog/go1.23).
-- No extra dependencies, everything using standard lib.
+- **Zero dependencies**, standard library only.
 
 
 ## Examples

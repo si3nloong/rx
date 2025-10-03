@@ -101,7 +101,7 @@ func SkipUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 				defer stop()
 
 				v, err, ok := next()
-				ch <- state[U]{v, err, ok}
+				ch <- state[U]{0, v, err, ok}
 			}()
 
 			next, stop := iter.Pull2((iter.Seq2[T, error])(input.Subscribe()))
