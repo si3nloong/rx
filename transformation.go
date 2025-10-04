@@ -94,6 +94,7 @@ func BufferCount[T any](count uint) OperatorFunc[T, []T] {
 	}
 }
 
+// Applies a given project function to each value emitted by the source Observable, and emits the resulting values as an Observable.
 func Map[I, O any](fn func(v I, index int) O) OperatorFunc[I, O] {
 	return func(input Observable[I]) Observable[O] {
 		return (ObservableFunc[O])(func(yield func(O, error) bool) {
@@ -114,6 +115,7 @@ func Map[I, O any](fn func(v I, index int) O) OperatorFunc[I, O] {
 	}
 }
 
+// Applies a given project function to each value emitted by the source Observable, and emits the resulting values as an Observable.
 func Map2[I, O any](fn func(v I, index int) (O, error)) OperatorFunc[I, O] {
 	return func(input Observable[I]) Observable[O] {
 		return (ObservableFunc[O])(func(yield func(O, error) bool) {
@@ -139,6 +141,7 @@ func Map2[I, O any](fn func(v I, index int) (O, error)) OperatorFunc[I, O] {
 	}
 }
 
+// Projects each source value to an Observable which is merged in the output Observable, in a serialized fashion waiting for each one to complete before merging the next.
 func ConcatMap[I, O any](project func(v I, index int) Observable[O]) OperatorFunc[I, O] {
 	return func(input Observable[I]) Observable[O] {
 		return (ObservableFunc[O])(func(yield func(O, error) bool) {
@@ -148,26 +151,17 @@ func ConcatMap[I, O any](project func(v I, index int) Observable[O]) OperatorFun
 					var zero O
 					yield(zero, err)
 					return
-				} else {
-					next2, stop2 := iter.Pull2(project(v, i).Subscribe())
-				loop2:
-					for {
-						v2, err2, ok2 := next2()
-						if err2 != nil {
-							stop2()
-							var zero O
-							yield(zero, err2)
+				}
+				for v2, err2 := range project(v, i).Subscribe() {
+					if err2 != nil {
+						var zero O
+						yield(zero, err2)
+						return
+					} else {
+						if !yield(v2, nil) {
 							return
-						} else if !ok2 {
-							break loop2
-						} else {
-							if !yield(v2, nil) {
-								stop2()
-								return
-							}
 						}
 					}
-					stop2()
 				}
 				i++
 			}
