@@ -5,10 +5,10 @@
 - [Defer](/docs/defer.md)
 - [Empty](/docs/empty.md)
 - [Interval](/docs/interval.md)
-- Of
+- [Of](/docs/of.md)
 - [Range](/docs/range.md)
-- ThrowError
-- Timer
+- [ThrowError](/docs/throwError.md)
+- [Timer](/docs/timer.md)
 - Iif
 
 ## Join Creation Operators

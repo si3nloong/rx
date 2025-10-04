@@ -37,7 +37,18 @@ func Interval(duration time.Duration) Observable[int] {
 	})
 }
 
-func Of[T any](items []T) Observable[T] {
+func From[T any](items []T) Observable[T] {
+	return (ObservableFunc[T])(func(yield func(T, error) bool) {
+		for _, v := range items {
+			if !yield(v, nil) {
+				return
+			}
+		}
+	})
+}
+
+// Converts the arguments to an observable sequence.
+func Of[T any](items ...T) Observable[T] {
 	return (ObservableFunc[T])(func(yield func(T, error) bool) {
 		for _, v := range items {
 			if !yield(v, nil) {

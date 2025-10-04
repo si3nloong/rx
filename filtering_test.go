@@ -8,7 +8,7 @@ import (
 func TestFiltering(t *testing.T) {
 	t.Run("DistinctUntilChanged", func(t *testing.T) {
 		Pipe2(
-			Of([]int{1, 1, 1, 2, 2, 2, 1, 1, 3, 3}),
+			From([]int{1, 1, 1, 2, 2, 2, 1, 1, 3, 3}),
 			DistinctUntilChanged[int](),
 			ToSlice[int](),
 		).SubscribeOn(func(v []int) {
