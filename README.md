@@ -69,6 +69,12 @@ for {
 }
 ```
 
+## Categories of operators
+
+There are operators for different purposes, and they may be categorized as: creation, transformation, filtering, joining, multicasting, error handling, utility, etc.
+
+For a complete overview, see the [operators](/docs/operators.md) page.
+
 ## Observable Types
 
 ### Hot vs. Cold Observables
@@ -77,7 +83,7 @@ In the Rx world, there is a distinction between cold and hot Observables. When t
 
 In RxGo, there is a similar concept.
 
-## Advanced
+## Example
 
 ```go
 package main
@@ -134,4 +140,3 @@ func main() {
     // 0, 2, 4, 6, 8, 10, I, II, III, IV, V, Completed!
 }
 ```
-

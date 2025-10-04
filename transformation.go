@@ -4,15 +4,14 @@ import (
 	"context"
 	"iter"
 	"sync"
+	"time"
 )
 
 func Buffer[T any, I any](closingNotifier Observable[I]) OperatorFunc[T, []T] {
 	return func(input Observable[T]) Observable[[]T] {
 		return (ObservableFunc[[]T])(func(yield func([]T, error) bool) {
-			var (
-				buffer = make([]T, 0)
-				rw     sync.RWMutex
-			)
+			var buffer = make([]T, 0)
+			var rw sync.RWMutex
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -41,16 +40,10 @@ func Buffer[T any, I any](closingNotifier Observable[I]) OperatorFunc[T, []T] {
 				}
 			}()
 
-			next, stop := iter.Pull2(closingNotifier.Subscribe())
-			defer stop()
-
-			for {
-				if _, err, ok := next(); err != nil {
+			for _, err := range closingNotifier.Subscribe() {
+				if err != nil {
 					cancel()
 					yield(nil, err)
-					return
-				} else if !ok {
-					cancel()
 					return
 				} else {
 					rw.Lock()
@@ -89,6 +82,39 @@ func BufferCount[T any](count uint) OperatorFunc[T, []T] {
 					return
 				}
 				clear(buffer)
+			}
+		})
+	}
+}
+
+// Buffers the source Observable values for a specific time period.
+func BufferTime[T any](duration time.Duration) OperatorFunc[T, []T] {
+	return func(input Observable[T]) Observable[[]T] {
+		return (ObservableFunc[[]T])(func(yield func([]T, error) bool) {
+			next, stop := iter.Pull2(input.Subscribe())
+			defer stop()
+
+			timer := time.NewTicker(duration)
+			defer timer.Stop()
+
+			buffer := make([]T, 0)
+			for {
+				select {
+				case <-timer.C:
+					if !yield(buffer, nil) {
+						return
+					}
+					buffer = make([]T, 0)
+				default:
+					v, err, ok := next()
+					if err != nil {
+						return
+					} else if !ok {
+						return
+					} else {
+						buffer = append(buffer, v)
+					}
+				}
 			}
 		})
 	}
