@@ -8,16 +8,10 @@ type ObservableFunc[T any] iter.Seq2[T, error]
 
 func (fn ObservableFunc[T]) All() iter.Seq[T] {
 	return func(yield func(T) bool) {
-		next, stop := iter.Pull2((iter.Seq2[T, error])(fn))
-		defer stop()
-
-		for {
-			v, err, ok := next()
+		for v, err := range (iter.Seq2[T, error])(fn) {
 			if err != nil {
 				var zero T
 				yield(zero)
-				return
-			} else if !ok {
 				return
 			} else {
 				if !yield(v) {

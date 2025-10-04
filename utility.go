@@ -6,6 +6,24 @@ import (
 	"time"
 )
 
+func Tap[T any](fn func(T)) OperatorFunc[T, T] {
+	return func(input Observable[T]) Observable[T] {
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			for v, err := range input.Subscribe() {
+				if err != nil {
+					yield(v, err)
+					return
+				} else {
+					fn(v)
+					if !yield(v, nil) {
+						return
+					}
+				}
+			}
+		})
+	}
+}
+
 func Delay[T any](duration time.Duration) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -25,18 +43,26 @@ func Delay[T any](duration time.Duration) OperatorFunc[T, T] {
 	}
 }
 
-func Tap[T any](fn func(T)) OperatorFunc[T, T] {
+func DelayWhen[T, R any](delayDurationSelector func(value T, index int) Observable[R]) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			for v, err := range input.Subscribe() {
+			next, stop := iter.Pull2(input.Subscribe())
+			defer stop()
+
+			var i int
+			for {
+				v, err, ok := next()
 				if err != nil {
 					yield(v, err)
 					return
+				} else if !ok {
+					return
 				} else {
-					fn(v)
+					delayDurationSelector(v, i).Subscribe()
 					if !yield(v, nil) {
 						return
 					}
+					i++
 				}
 			}
 		})

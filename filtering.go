@@ -268,9 +268,40 @@ func Last[T any]() OperatorFunc[T, T] {
 	}
 }
 
+// Emits the most recently emitted value from the source Observable within periodic time intervals.
 func SampleTime[T any](duration time.Duration) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			next, stop := iter.Pull2(input.Subscribe())
+			defer stop()
+
+			timer := time.NewTicker(duration)
+			defer timer.Stop()
+
+			var latestValue T
+			var emitted bool
+			for {
+				select {
+				case <-timer.C:
+					// sampleTime periodically looks at the source Observable and emits whichever value it has most recently emitted since the previous sampling, unless the source has not emitted anything since the previous sampling.
+					if emitted {
+						if !yield(latestValue, nil) {
+							return
+						}
+						emitted = false
+					}
+				default:
+					v, err, ok := next()
+					if err != nil {
+						return
+					} else if !ok {
+						return
+					} else {
+						emitted = true
+						latestValue = v
+					}
+				}
+			}
 		})
 	}
 }
