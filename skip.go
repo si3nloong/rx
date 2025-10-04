@@ -6,6 +6,7 @@ import (
 	"sync"
 )
 
+// Returns an Observable that skips the first count items emitted by the source Observable.
 func Skip[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -28,6 +29,7 @@ func Skip[T any](count uint) OperatorFunc[T, T] {
 	}
 }
 
+// Skip a specified number of values before the completion of an observable.
 func SkipLast[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -54,6 +56,7 @@ func SkipLast[T any](count uint) OperatorFunc[T, T] {
 	}
 }
 
+// Returns an Observable that skips all items emitted by the source Observable as long as a specified condition holds true, but emits all further source items as soon as the condition becomes false.
 func SkipWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -75,6 +78,7 @@ func SkipWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 	}
 }
 
+// Returns an Observable that skips items emitted by the source Observable until a second Observable emits an item.
 func SkipUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -91,6 +95,7 @@ func SkipUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 				// Internally, the skipUntil operator subscribes to the passed in notifier ObservableInput (which gets converted to an Observable)
 				// in order to recognize the emission of its first value.
 				v, err, ok := next()
+				// When notifier emits next, the operator unsubscribes from it and starts emitting the values of the source observable until it completes or errors.
 				select {
 				case <-ctx.Done():
 				case ch <- state[U]{v, err, ok}:
@@ -105,6 +110,7 @@ func SkipUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 			for {
 				select {
 				case o := <-ch:
+					// It will never let the source observable emit any values if the notifier completes or throws an error without emitting a value before.
 					if o.err != nil {
 						var zero T
 						yield(zero, o.err)

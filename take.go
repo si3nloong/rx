@@ -6,6 +6,7 @@ import (
 	"sync"
 )
 
+// Emits only the first count values emitted by the source Observable.
 func Take[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -29,6 +30,7 @@ func Take[T any](count uint) OperatorFunc[T, T] {
 	}
 }
 
+// Waits for the source to complete, then emits the last N values from the source, as specified by the count argument.
 func TakeLast[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -55,6 +57,7 @@ func TakeLast[T any](count uint) OperatorFunc[T, T] {
 	}
 }
 
+// Emits values emitted by the source Observable so long as each value satisfies the given predicate, and then completes as soon as this predicate is not satisfied.
 func TakeWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -77,6 +80,7 @@ func TakeWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 	}
 }
 
+// Emits the values emitted by the source Observable until a notifier Observable emits a value.
 func TakeUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -84,49 +88,55 @@ func TakeUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
+			ch := make(chan state[U], 1)
+			defer close(ch)
+
 			wg.Go(func() {
 				next, stop := iter.Pull2(notifier.Subscribe())
 				defer stop()
 
-				for {
-					select {
-					case <-ctx.Done():
-						return
-					default:
-						if _, err, ok := next(); err != nil {
-							return
-						} else if !ok {
-							return
-						} else {
-							cancel()
-							return
-						}
-					}
+				v, err, ok := next()
+				select {
+				case <-ctx.Done():
+				case ch <- state[U]{v, err, ok}:
 				}
 			})
 
 			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
-
+		loop:
 			for {
 				select {
-				case <-ctx.Done():
+				case o := <-ch:
+					if o.err != nil {
+						var zero T
+						yield(zero, o.err)
+						return
+					} else if !o.ok {
+						// If the notifier doesn't emit any value and completes then takeUntil will pass all values.
+						continue
+					}
 					return
 				default:
 					v, err, ok := next()
 					if err != nil {
+						cancel()
 						var zero T
 						yield(zero, err)
-						return
+						break loop
 					} else if !ok {
-						return
+						cancel()
+						break loop
 					} else {
 						if !yield(v, nil) {
-							return
+							cancel()
+							break loop
 						}
 					}
 				}
 			}
+
+			wg.Wait()
 		})
 	}
 }
