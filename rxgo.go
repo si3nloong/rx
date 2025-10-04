@@ -27,7 +27,6 @@ var ErrSequence = errors.New(`rxgo: too many values match`)
 var errEmptyObservable = errors.New("rxgo: empty observable")
 
 type state[T any] struct {
-	idx int
 	v   T
 	err error
 	ok  bool

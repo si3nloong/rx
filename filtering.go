@@ -231,9 +231,11 @@ func First[T any]() OperatorFunc[T, T] {
 					return
 				} else {
 					yield(v, nil)
-					break
+					return
 				}
 			}
+			var zero T
+			yield(zero, ErrEmpty)
 		})
 	}
 }
@@ -255,15 +257,20 @@ func IgnoreElements[T any]() OperatorFunc[T, T] {
 func Last[T any]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			var latestValue T
+			var latestValue *T
 			for v, err := range input.Subscribe() {
 				if err != nil {
 					yield(v, err)
 					return
 				}
-				latestValue = v
+				latestValue = &v
 			}
-			yield(latestValue, nil)
+			if latestValue != nil {
+				yield(*latestValue, nil)
+				return
+			}
+			var zero T
+			yield(zero, ErrEmpty)
 		})
 	}
 }

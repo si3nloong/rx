@@ -1,7 +1,9 @@
 package rxgo
 
 import (
+	"context"
 	"iter"
+	"sync"
 )
 
 func Skip[T any](count uint) OperatorFunc[T, T] {
@@ -76,25 +78,61 @@ func SkipWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 func SkipUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			var wg sync.WaitGroup
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
 			ch := make(chan state[U], 1)
-			go func() {
+			defer close(ch)
+
+			wg.Go(func() {
 				next, stop := iter.Pull2(notifier.Subscribe())
 				defer stop()
-
+				// Internally, the skipUntil operator subscribes to the passed in notifier ObservableInput (which gets converted to an Observable)
+				// in order to recognize the emission of its first value.
 				v, err, ok := next()
-				ch <- state[U]{0, v, err, ok}
-			}()
+				select {
+				case <-ctx.Done():
+				case ch <- state[U]{v, err, ok}:
+				}
+			})
 
-			for v, err := range input.Subscribe() {
-				if err != nil {
-					yield(v, err)
-					return
-				} else {
-					if !yield(v, nil) {
+			next, stop := iter.Pull2(input.Subscribe())
+			defer stop()
+
+			var allowedEmit bool
+		loop:
+			for {
+				select {
+				case o := <-ch:
+					if o.err != nil {
+						var zero T
+						yield(zero, o.err)
 						return
+					} else if !o.ok {
+						return
+					} else {
+						allowedEmit = true
+					}
+				default:
+					v, err, ok := next()
+					if err != nil {
+						cancel()
+						var zero T
+						yield(zero, err)
+						break loop
+					} else if !ok {
+						cancel()
+						break loop
+					} else if allowedEmit {
+						if !yield(v, nil) {
+							return
+						}
 					}
 				}
 			}
+
+			wg.Wait()
 		})
 	}
 }
