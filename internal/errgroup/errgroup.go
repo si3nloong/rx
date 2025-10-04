@@ -1,4 +1,4 @@
-package rxgo
+package errgroup
 
 import (
 	"context"

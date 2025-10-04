@@ -148,6 +148,21 @@ func TestFilter(t *testing.T) {
 	), []int{2, 4, 8, 10, 14})
 }
 
+func TestForkJoin(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	assertItems(t, rxgo.ForkJoin(
+		rxgo.Of([]int{1, 2, 3, 4, 7, 8, 9, 10, 11, 14}),
+		rxgo.Timer[int](time.Second),
+	), [][]int{{14, 0}})
+
+	assertItem(t, rxgo.ForkJoin(
+		rxgo.Empty[int](),
+		rxgo.Of([]int{1, 2, 3, 4, 7, 8, 9, 10, 11, 14}),
+		rxgo.Timer[int](time.Second),
+	), [][]int{})
+}
+
 func TestIsEmpty(t *testing.T) {
 	defer goleak.VerifyNone(t)
 

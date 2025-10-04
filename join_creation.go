@@ -2,9 +2,12 @@ package rxgo
 
 import (
 	"context"
+	"errors"
 	"iter"
 	"sync"
 	"sync/atomic"
+
+	"github.com/si3nloong/rxgo/internal/errgroup"
 )
 
 func CombineLatest[T any](inputs ...Observable[T]) Observable[[]T] {
@@ -13,7 +16,7 @@ func CombineLatest[T any](inputs ...Observable[T]) Observable[[]T] {
 	}
 	return (ObservableFunc[[]T])(func(yield func([]T, error) bool) {
 		inputCount := len(inputs)
-		ch := make(chan state[T], 1)
+		ch := make(chan goState[T], 1)
 		defer close(ch)
 
 		var wg sync.WaitGroup
@@ -31,7 +34,7 @@ func CombineLatest[T any](inputs ...Observable[T]) Observable[[]T] {
 						select {
 						case <-ctx.Done():
 							return
-						case ch <- state[T]{index, v, err, ok}:
+						case ch <- goState[T]{index, v, err, ok}:
 							if err != nil || !ok {
 								return
 							}
@@ -49,6 +52,8 @@ func CombineLatest[T any](inputs ...Observable[T]) Observable[[]T] {
 	loop:
 		for o := range ch {
 			if o.err != nil {
+				// Propagate the error to all observable
+				cancel()
 				yield(nil, o.err)
 				return
 			} else if !o.ok {
@@ -61,6 +66,7 @@ func CombineLatest[T any](inputs ...Observable[T]) Observable[[]T] {
 				results[o.idx] = o.v
 				if len(idxCache) >= inputCount {
 					if !yield(results, nil) {
+						cancel()
 						return
 					}
 				}
@@ -77,22 +83,13 @@ func Concat[T any](inputs ...Observable[T]) Observable[T] {
 	}
 	return (ObservableFunc[T])(func(yield func(T, error) bool) {
 		for len(inputs) > 0 {
-			next, stop := iter.Pull2(inputs[0].Subscribe())
-
-		innerLoop:
-			for {
-				v, err, ok := next()
+			for v, err := range inputs[0].Subscribe() {
 				if err != nil {
-					stop()
 					var zero T
 					yield(zero, err)
 					return
-				} else if !ok {
-					stop()
-					break innerLoop
 				} else {
 					if !yield(v, nil) {
-						stop()
 						return
 					}
 				}
@@ -103,12 +100,13 @@ func Concat[T any](inputs ...Observable[T]) Observable[T] {
 	})
 }
 
+// Wait for Observables to complete and then combine last values they emitted; complete immediately if an empty array is passed.
 func ForkJoin[T any](inputs ...Observable[T]) Observable[[]T] {
 	if len(inputs) < 2 {
 		panic(`ForkJoin required at least 2 observable`)
 	}
 	return (ObservableFunc[[]T])(func(yield func([]T, error) bool) {
-		g := Group{}
+		g, ctx := errgroup.WithContext(context.Background())
 		results := make([]T, len(inputs))
 		for i, v := range inputs {
 			g.Go(func(index int, input Observable[T]) func() error {
@@ -116,14 +114,29 @@ func ForkJoin[T any](inputs ...Observable[T]) Observable[[]T] {
 					next, stop := iter.Pull2(input.Subscribe())
 					defer stop()
 
+					v, err, ok := next()
+					if err != nil {
+						return err
+					} else if !ok {
+						// If no input observables are provided (e.g. an empty array is passed), then the resulting stream will complete immediately.
+						return errEmptyObservable
+					} else {
+						results[index] = v
+					}
+
 					for {
-						v, err, ok := next()
-						if err != nil {
-							return err
-						} else if !ok {
+						select {
+						case <-ctx.Done():
 							return nil
-						} else {
-							results[index] = v
+						default:
+							v, err, ok := next()
+							if err != nil {
+								return err
+							} else if !ok {
+								return nil
+							} else {
+								results[index] = v
+							}
 						}
 					}
 				}
@@ -131,8 +144,10 @@ func ForkJoin[T any](inputs ...Observable[T]) Observable[[]T] {
 		}
 
 		if err := g.Wait(); err != nil {
+			if errors.Is(err, errEmptyObservable) {
+				return
+			}
 			yield(nil, err)
-			return
 		} else {
 			yield(results, nil)
 		}
@@ -146,7 +161,7 @@ func Merge[T any](inputs ...Observable[T]) Observable[T] {
 	return (ObservableFunc[T])(func(yield func(T, error) bool) {
 		ch := make(chan T, 1)
 
-		g, ctx := WithContext(context.Background())
+		g, ctx := errgroup.WithContext(context.Background())
 		for i, v := range inputs {
 			g.Go(func(index int, input Observable[T]) func() error {
 				return func() error {

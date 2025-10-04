@@ -24,7 +24,16 @@ var ErrTimeout = errors.New(`rxgo: timeout`)
 var ErrArgumentOutOfRange = errors.New(`rxgo: out of range`)
 var ErrSequence = errors.New(`rxgo: too many values match`)
 
+var errEmptyObservable = errors.New("rxgo: empty observable")
+
 type state[T any] struct {
+	idx int
+	v   T
+	err error
+	ok  bool
+}
+
+type goState[T any] struct {
 	idx int
 	v   T
 	err error
