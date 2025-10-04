@@ -57,11 +57,11 @@ func TestCatchError(t *testing.T) {
 			return rxgo.Of([]string{"I", "II", "III", "IV", "V"})
 		}),
 	), []rxgo.Either[int, string]{
-		rxgo.NewA[int, string](2),
-		rxgo.NewA[int, string](4),
-		rxgo.NewA[int, string](6),
-		rxgo.NewA[int, string](8),
-		rxgo.NewA[int, string](10),
+		rxgo.NewA[string](2),
+		rxgo.NewA[string](4),
+		rxgo.NewA[string](6),
+		rxgo.NewA[string](8),
+		rxgo.NewA[string](10),
 		rxgo.NewB[int]("I"),
 		rxgo.NewB[int]("II"),
 		rxgo.NewB[int]("III"),

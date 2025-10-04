@@ -57,10 +57,10 @@ func Range[T Number](start, count T) Observable[T] {
 	})
 }
 
-func ThrowError[T any](fn func() error) Observable[T] {
+func ThrowError[T any](errFactory func() error) Observable[T] {
 	return (ObservableFunc[T])(func(yield func(T, error) bool) {
-		var v T
-		yield(v, fn())
+		var zero T
+		yield(zero, errFactory())
 	})
 }
 

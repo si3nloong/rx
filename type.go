@@ -6,7 +6,7 @@ type Either[A, B any] struct {
 	v any
 }
 
-func NewA[A, B any](v A) Either[A, B] {
+func NewA[B, A any](v A) Either[A, B] {
 	return Either[A, B]{v: v}
 }
 

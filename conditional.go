@@ -88,15 +88,15 @@ func FindIndex[T any](predicate func(T, int) bool) OperatorFunc[T, int] {
 func IsEmpty[T any]() OperatorFunc[T, bool] {
 	return func(input Observable[T]) Observable[bool] {
 		return (ObservableFunc[bool])(func(yield func(bool, error) bool) {
-			var empty = true
 			for _, err := range input.Subscribe() {
 				if err != nil {
 					yield(false, err)
 					return
 				}
-				empty = false
+				yield(false, nil)
+				return
 			}
-			yield(empty, nil)
+			yield(true, nil)
 		})
 	}
 }
