@@ -1,63 +1,105 @@
 package rxgo
 
 import (
-	"context"
 	"iter"
 	"reflect"
 	"time"
 )
 
+func AuditTime[T any](duration time.Duration) OperatorFunc[T, T] {
+	return func(input Observable[T]) Observable[T] {
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			var latestValue T
+			var stopped bool
+			var timer *time.Timer
+			defer func() {
+				if timer != nil {
+					timer.Stop()
+				}
+			}()
+			for v, err := range input.Subscribe() {
+				if err != nil {
+					var zero T
+					yield(zero, err)
+					return
+				} else if stopped {
+					return
+				} else {
+					latestValue = v
+					if timer == nil {
+						timer = time.AfterFunc(duration, func() {
+							timer = nil
+							if !yield(latestValue, nil) {
+								stopped = true
+								return
+							}
+						})
+					}
+				}
+			}
+		})
+	}
+}
+
 func DebounceTime[T any](duration time.Duration) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
-			ch := make(chan state[T], 1)
-			defer close(ch)
-
-			go func() {
-				next, stop := iter.Pull2(input.Subscribe())
-				defer stop()
-
-				for {
-					v, err, ok := next()
-					select {
-					case <-ctx.Done():
-						return
-					case ch <- state[T]{0, v, err, ok}:
-						if err != nil || !ok {
-							return
-						}
-					}
+			var latestValue T
+			var stopped bool
+			var timer *time.Timer
+			defer func() {
+				if timer != nil {
+					timer.Stop()
 				}
 			}()
-
-			var latestValue T
-			var emitted bool
-			for {
-				select {
-				case <-time.After(duration):
-					if emitted {
+			for v, err := range input.Subscribe() {
+				if err != nil {
+					var zero T
+					yield(zero, err)
+					return
+				} else if stopped {
+					return
+				} else {
+					if timer != nil {
+						timer.Stop()
+					}
+					timer = time.AfterFunc(duration, func() {
 						if !yield(latestValue, nil) {
+							stopped = true
 							return
 						}
-						emitted = false
-					}
-				case r := <-ch:
-					if r.err != nil {
-						cancel()
-						var zero T
-						yield(zero, r.err)
-						return
-					} else if !r.ok {
-						cancel()
-						return
-					} else {
-						latestValue = r.v
-						emitted = true
-					}
+					})
+					latestValue = v
 				}
+			}
+		})
+	}
+}
+
+func Distinct[T any, K comparable](keySelector func(value T) K) OperatorFunc[T, T] {
+	return func(input Observable[T]) Observable[T] {
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			keyCache := make(map[K]struct{})
+			defer clear(keyCache)
+			results := make([]T, 0)
+			for v, err := range input.Subscribe() {
+				if err != nil {
+					yield(v, err)
+					return
+				} else {
+					key := keySelector(v)
+					if _, ok := keyCache[key]; ok {
+						continue
+					}
+					keyCache[key] = struct{}{}
+					results = append(results, v)
+				}
+			}
+			for len(results) > 0 {
+				if !yield(results[0], nil) {
+					return
+				}
+				results = results[1:]
 			}
 		})
 	}
@@ -196,31 +238,6 @@ func First[T any]() OperatorFunc[T, T] {
 	}
 }
 
-func Last[T any]() OperatorFunc[T, T] {
-	return func(input Observable[T]) Observable[T] {
-		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2(input.Subscribe())
-			defer stop()
-
-			var latestValue T
-		loop:
-			for {
-				v, err, ok := next()
-				if err != nil {
-					yield(v, err)
-					return
-				} else if !ok {
-					break loop
-				} else {
-					latestValue = v
-				}
-			}
-
-			yield(latestValue, nil)
-		})
-	}
-}
-
 func IgnoreElements[T any]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -235,29 +252,92 @@ func IgnoreElements[T any]() OperatorFunc[T, T] {
 	}
 }
 
-func Single[T any](fn func(T, int) bool) OperatorFunc[T, T] {
+func Last[T any]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2(input.Subscribe())
-			defer stop()
+			var latestValue T
+			for v, err := range input.Subscribe() {
+				if err != nil {
+					yield(v, err)
+					return
+				}
+				latestValue = v
+			}
+			yield(latestValue, nil)
+		})
+	}
+}
 
+func SampleTime[T any](duration time.Duration) OperatorFunc[T, T] {
+	return func(input Observable[T]) Observable[T] {
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+		})
+	}
+}
+
+func Single[T any](predicate func(T, int) bool) OperatorFunc[T, T] {
+	return func(input Observable[T]) Observable[T] {
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
 			var i int
-			for {
-				v, err, ok := next()
+			var value *T
+			for v, err := range input.Subscribe() {
 				if err != nil {
 					var zero T
 					yield(zero, err)
 					return
-				} else if !ok {
-					return
-				} else {
-					if fn(v, i) {
-						if !yield(v, nil) {
-							return
-						}
+				}
+				if predicate(v, i) {
+					if value != nil {
+						var zero T
+						yield(zero, ErrSequence)
+						return
 					}
+					value = &v
 				}
 				i++
+			}
+			var zero T
+			if i > 0 {
+				if value != nil {
+					yield(*value, nil)
+					return
+				}
+				yield(zero, ErrNotFound)
+			} else {
+				yield(zero, ErrEmpty)
+			}
+		})
+	}
+}
+
+func ThrottleTime[T any](duration time.Duration) OperatorFunc[T, T] {
+	return func(input Observable[T]) Observable[T] {
+		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			var latestValue T
+			var emitted bool
+			var timer *time.Timer
+			defer func() {
+				if timer != nil {
+					timer.Stop()
+				}
+			}()
+			for v, err := range input.Subscribe() {
+				if err != nil {
+					var zero T
+					yield(zero, err)
+					return
+				} else {
+					latestValue = v
+					if !emitted {
+						if !yield(latestValue, nil) {
+							return
+						}
+						emitted = true
+						timer = time.AfterFunc(duration, func() {
+							emitted = false
+						})
+					}
+				}
 			}
 		})
 	}

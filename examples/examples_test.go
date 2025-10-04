@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -76,6 +77,33 @@ func TestDefaultIfEmpty(t *testing.T) {
 		rxgo.Empty[string](),
 		rxgo.DefaultIfEmpty(`hello world!`),
 	), []string{`hello world!`})
+}
+
+func TestDistinct(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	assertItem(t, rxgo.Pipe1(
+		rxgo.Of([]int{1, 1, 2, 2, 2, 1, 2, 3, 4, 3, 2, 1}),
+		rxgo.Distinct(func(v int) int {
+			return v
+		}),
+	), []int{1, 2, 3, 4})
+
+	type user struct {
+		name string
+		age  int
+	}
+
+	assertItem(t, rxgo.Pipe1(
+		rxgo.Of([]user{
+			{"Foo", 4},
+			{"Bar", 7},
+			{"Foo", 5},
+		}),
+		rxgo.Distinct(func(v user) string {
+			return v.name
+		}),
+	), []user{{"Foo", 4}, {"Bar", 7}})
 }
 
 func TestDistinctUntilChanged(t *testing.T) {
@@ -171,6 +199,44 @@ func TestReduce(t *testing.T) {
 	})
 }
 
+func TestSingle(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	assertItem(t, rxgo.Pipe1(
+		rxgo.Of([]string{"Ben", "Tracy", "Laney", "Lily"}),
+		rxgo.Single(func(v string, _ int) bool {
+			return strings.HasPrefix(v, "B")
+		}),
+	), []string{"Ben"})
+
+	t.Run("Empty", func(t *testing.T) {
+		isError(t, rxgo.Pipe1(
+			rxgo.Of([]string{}),
+			rxgo.Single(func(v string, _ int) bool {
+				return strings.HasPrefix(v, "B")
+			}),
+		), rxgo.ErrEmpty)
+	})
+
+	t.Run("Too many value matched", func(t *testing.T) {
+		isError(t, rxgo.Pipe1(
+			rxgo.Of([]string{"Ben", "Tracy", "Bradley", "Lily"}),
+			rxgo.Single(func(v string, _ int) bool {
+				return strings.HasPrefix(v, "B")
+			}),
+		), rxgo.ErrSequence)
+	})
+
+	t.Run("Not found", func(t *testing.T) {
+		isError(t, rxgo.Pipe1(
+			rxgo.Of([]string{"Lance", "Lily"}),
+			rxgo.Single(func(v string, _ int) bool {
+				return strings.HasPrefix(v, "B")
+			}),
+		), rxgo.ErrNotFound)
+	})
+}
+
 func TestSkipLast(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
@@ -233,4 +299,14 @@ func assertItems[T any](t *testing.T, observable rxgo.Observable[[]T], expected 
 		result = append(result, append([]T{}, v...))
 	}
 	require.ElementsMatch(t, result, expected)
+}
+
+func isError[T any](t *testing.T, observable rxgo.Observable[T], expectedErr error) {
+	for _, err := range observable.Subscribe() {
+		if err != nil {
+			require.ErrorIs(t, err, expectedErr)
+			return
+		}
+		require.NoError(t, err)
+	}
 }

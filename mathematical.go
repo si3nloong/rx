@@ -1,46 +1,31 @@
 package rxgo
 
-import (
-	"iter"
-)
-
 func Count[T Number](predicate ...func(value T, index int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2(input.Subscribe())
-			defer stop()
-
 			var count T
 			if len(predicate) > 0 {
 				var i int
 				fn := predicate[0]
-
-				for {
-					v, err, ok := next()
+				for v, err := range input.Subscribe() {
 					if err != nil {
 						var zero T
 						yield(zero, err)
 						return
-					} else if !ok {
-						break
-					} else {
-						if fn(v, i) {
-							count++
-						}
-						i++
 					}
+					if fn(v, i) {
+						count++
+					}
+					i++
 				}
 			} else {
-				for {
-					if _, err, ok := next(); err != nil {
+				for _, err := range input.Subscribe() {
+					if err != nil {
 						var zero T
 						yield(zero, err)
 						return
-					} else if !ok {
-						break
-					} else {
-						count++
 					}
+					count++
 				}
 			}
 
@@ -52,35 +37,16 @@ func Count[T Number](predicate ...func(value T, index int) bool) OperatorFunc[T,
 func Min[T Number]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2(input.Subscribe())
-			defer stop()
-
-			minValue, err, ok := next()
-			if err != nil {
-				var zero T
-				yield(zero, err)
-				return
-			} else if !ok {
-				yield(minValue, nil)
-				return
-			}
-
-			for {
-				v, err, ok := next()
+			var minValue T
+			for v, err := range input.Subscribe() {
 				if err != nil {
 					var zero T
 					yield(zero, err)
 					return
-				} else if !ok {
-					break
-				} else {
-					minValue = min(minValue, v)
 				}
+				minValue = min(minValue, v)
 			}
-
-			if !yield(minValue, nil) {
-				return
-			}
+			yield(minValue, nil)
 		})
 	}
 }
@@ -88,35 +54,16 @@ func Min[T Number]() OperatorFunc[T, T] {
 func Max[T Number]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2(input.Subscribe())
-			defer stop()
-
-			maxValue, err, ok := next()
-			if err != nil {
-				var zero T
-				yield(zero, err)
-				return
-			} else if !ok {
-				yield(maxValue, nil)
-				return
-			}
-
-			for {
-				v, err, ok := next()
+			var maxValue T
+			for v, err := range input.Subscribe() {
 				if err != nil {
 					var zero T
 					yield(zero, err)
 					return
-				} else if !ok {
-					break
-				} else {
-					maxValue = max(maxValue, v)
 				}
+				maxValue = max(maxValue, v)
 			}
-
-			if !yield(maxValue, nil) {
-				return
-			}
+			yield(maxValue, nil)
 		})
 	}
 }
@@ -124,28 +71,20 @@ func Max[T Number]() OperatorFunc[T, T] {
 func Reduce[V, A any](accumulator func(acc A, value V, index int) A, seed A) OperatorFunc[V, A] {
 	return func(input Observable[V]) Observable[A] {
 		return (ObservableFunc[A])(func(yield func(A, error) bool) {
-			next, stop := iter.Pull2(input.Subscribe())
-			defer stop()
-
 			var (
 				acc = seed
 				i   int
 			)
-
-			for {
-				v, err, ok := next()
+			for v, err := range input.Subscribe() {
 				if err != nil {
 					var zero A
 					yield(zero, err)
 					return
-				} else if !ok {
-					break
 				} else {
 					acc = accumulator(acc, v, i)
 					i++
 				}
 			}
-
 			yield(acc, nil)
 		})
 	}

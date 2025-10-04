@@ -4,6 +4,7 @@ import (
 	"context"
 	"iter"
 	"sync"
+	"sync/atomic"
 )
 
 func CombineLatest[T any](inputs ...Observable[T]) Observable[[]T] {
@@ -192,14 +193,56 @@ func Race[T any](inputs ...Observable[T]) Observable[T] {
 		panic(`Race required at least 2 observable`)
 	}
 	return (ObservableFunc[T])(func(yield func(T, error) bool) {
-	})
-}
+		var wg sync.WaitGroup
+		var once sync.Once
+		var selectedIndex int32
 
-func Zip[T any](inputs ...Observable[T]) Observable[[]T] {
-	if len(inputs) < 2 {
-		panic(`Zip required at least 2 observable`)
-	}
-	return (ObservableFunc[[]T])(func(yield func([]T, error) bool) {
+		for i := range inputs {
+			wg.Go(func(index int, input Observable[T]) func() {
+				return func() {
+					next, stop := iter.Pull2(input.Subscribe())
+					defer stop()
 
+					// Peek the first emission
+					v, err, ok := next()
+					if !ok {
+						return
+					} else {
+						once.Do(func() {
+							atomic.StoreInt32(&selectedIndex, (int32)(index))
+						})
+						if atomic.LoadInt32(&selectedIndex) != (int32)(index) {
+							return
+						}
+						// If one of the used source observable throws an errors before a first notification the race operator will also throw an error, no matter if another source observable could potentially win the race.
+						if err != nil {
+							var zero T
+							yield(zero, err)
+							return
+						}
+
+						// As soon as one of the source observables emits a value, the result unsubscribes from the other sources.
+						// The resulting observable will forward all notifications, including error and completion, from the "winning" source observable.
+						if !yield(v, nil) {
+							return
+						}
+
+						for {
+							v, err, ok := next()
+							if err != nil {
+								return
+							} else if !ok {
+								return
+							} else {
+								if !yield(v, nil) {
+									return
+								}
+							}
+						}
+					}
+				}
+			}(i, inputs[i]))
+		}
+		wg.Wait()
 	})
 }

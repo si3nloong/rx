@@ -22,6 +22,7 @@ var ErrEmpty = errors.New(`rxgo: empty value`)
 var ErrNotFound = errors.New(`rxgo: no values match`)
 var ErrTimeout = errors.New(`rxgo: timeout`)
 var ErrArgumentOutOfRange = errors.New(`rxgo: out of range`)
+var ErrSequence = errors.New(`rxgo: too many values match`)
 
 type state[T any] struct {
 	idx int

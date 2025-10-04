@@ -1,27 +1,19 @@
 package rxgo
 
 import (
-	"iter"
 	"time"
 )
 
 func Defer[T any](observableFactory func() Observable[T]) Observable[T] {
 	return (ObservableFunc[T])(func(yield func(T, error) bool) {
-		next, stop := iter.Pull2(observableFactory().Subscribe())
-		defer stop()
-
-		for {
-			v, err, ok := next()
+		for v, err := range observableFactory().Subscribe() {
 			if err != nil {
 				var zero T
 				yield(zero, err)
 				return
-			} else if !ok {
+			}
+			if !yield(v, nil) {
 				return
-			} else {
-				if !yield(v, nil) {
-					return
-				}
 			}
 		}
 	})
@@ -83,38 +75,25 @@ func Timer[N Number](duration time.Duration) Observable[N] {
 func Iif[A, B any](condition func() bool, trueResult Observable[A], falseResult Observable[B]) Observable[Either[A, B]] {
 	return (ObservableFunc[Either[A, B]])(func(yield func(Either[A, B], error) bool) {
 		if condition() {
-			next, stop := iter.Pull2(trueResult.Subscribe())
-			defer stop()
-
-			for {
-				v, err, ok := next()
+			for v, err := range trueResult.Subscribe() {
 				if err != nil {
 					yield(Either[A, B]{}, err)
 					return
-				} else if !ok {
+				}
+				if !yield(Either[A, B]{v: v}, nil) {
 					return
-				} else {
-					if !yield(Either[A, B]{v}, nil) {
-						return
-					}
 				}
 			}
+			return
 		}
 
-		next, stop := iter.Pull2(falseResult.Subscribe())
-		defer stop()
-
-		for {
-			v, err, ok := next()
+		for v, err := range falseResult.Subscribe() {
 			if err != nil {
 				yield(Either[A, B]{}, err)
 				return
-			} else if !ok {
+			}
+			if !yield(Either[A, B]{v: v}, nil) {
 				return
-			} else {
-				if !yield(Either[A, B]{v}, nil) {
-					return
-				}
 			}
 		}
 	})

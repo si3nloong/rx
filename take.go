@@ -3,22 +3,17 @@ package rxgo
 import (
 	"context"
 	"iter"
+	"sync"
 )
 
 func Take[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2(input.Subscribe())
-			defer stop()
-
 			var takeCount uint
-			for {
-				v, err, ok := next()
+			for v, err := range input.Subscribe() {
 				if err != nil {
 					var zero T
 					yield(zero, err)
-					return
-				} else if !ok {
 					return
 				} else {
 					takeCount++
@@ -37,19 +32,12 @@ func Take[T any](count uint) OperatorFunc[T, T] {
 func TakeLast[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2(input.Subscribe())
-			defer stop()
-
 			result := make([]T, 0, count)
-		loop:
-			for {
-				v, err, ok := next()
+			for v, err := range input.Subscribe() {
 				if err != nil {
 					var zero T
 					yield(zero, err)
 					return
-				} else if !ok {
-					break loop
 				} else {
 					result = append(result, v)
 					if (uint)(len(result)) > count {
@@ -70,17 +58,11 @@ func TakeLast[T any](count uint) OperatorFunc[T, T] {
 func TakeWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			next, stop := iter.Pull2(input.Subscribe())
-			defer stop()
-
 			var i int
-			for {
-				v, err, ok := next()
+			for v, err := range input.Subscribe() {
 				if err != nil {
 					var zero T
 					yield(zero, err)
-					return
-				} else if !ok {
 					return
 				} else {
 					if fn(v, i) {
@@ -98,10 +80,11 @@ func TakeWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 func TakeUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
+			var wg sync.WaitGroup
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			go func() {
+			wg.Go(func() {
 				next, stop := iter.Pull2(notifier.Subscribe())
 				defer stop()
 
@@ -120,7 +103,7 @@ func TakeUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 						}
 					}
 				}
-			}()
+			})
 
 			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()

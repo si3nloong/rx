@@ -144,23 +144,15 @@ func Timeout[T any](duration time.Duration) OperatorFunc[T, T] {
 func ToSlice[T any]() OperatorFunc[T, []T] {
 	return func(input Observable[T]) Observable[[]T] {
 		return (ObservableFunc[[]T])(func(yield func([]T, error) bool) {
-			next, stop := iter.Pull2(input.Subscribe())
-			defer stop()
-
 			result := make([]T, 0)
-		loop:
-			for {
-				v, err, ok := next()
+			for v, err := range input.Subscribe() {
 				if err != nil {
 					yield(nil, err)
 					return
-				} else if !ok {
-					break loop
 				} else {
 					result = append(result, v)
 				}
 			}
-
 			yield(result, nil)
 		})
 	}
