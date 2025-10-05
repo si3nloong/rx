@@ -11,6 +11,14 @@ type Number interface {
 		~float32 | ~float64
 }
 
+type Iterator[T any] interface {
+	[]T | chan T | <-chan T | iter.Seq[T] | iter.Seq2[T, error]
+}
+
+type Iterator2[T any, K comparable] interface {
+	[]T | map[K]T | chan T | <-chan T | iter.Seq[T] | iter.Seq2[T, error]
+}
+
 type Observable[T any] interface {
 	Subscribe() iter.Seq2[T, error]
 	SubscribeOn(onNext func(T), onFailed func(error), onCompleted func())

@@ -15,7 +15,7 @@ func TestBuffer(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
 	assertItems(t, rxgo.Pipe1(
-		rxgo.From([]int{1, 3, 4, 5, 9}),
+		rxgo.From[int]([]int{1, 3, 4, 5, 9}),
 		rxgo.BufferCount[int](2),
 	), [][]int{
 		{1, 3},
@@ -28,9 +28,9 @@ func TestCombineLatest(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
 	assertItems(t, rxgo.CombineLatest(
-		rxgo.Pipe2(rxgo.From([]int{1}), rxgo.Delay[int](time.Second), rxgo.StartWith(0)),
-		rxgo.Pipe2(rxgo.From([]int{5}), rxgo.Delay[int](time.Second*5), rxgo.StartWith(0)),
-		rxgo.Pipe2(rxgo.From([]int{10}), rxgo.Delay[int](time.Second*10), rxgo.StartWith(0)),
+		rxgo.Pipe2(rxgo.From[int]([]int{1}), rxgo.Delay[int](time.Second), rxgo.StartWith(0)),
+		rxgo.Pipe2(rxgo.From[int]([]int{5}), rxgo.Delay[int](time.Second*5), rxgo.StartWith(0)),
+		rxgo.Pipe2(rxgo.From[int]([]int{10}), rxgo.Delay[int](time.Second*10), rxgo.StartWith(0)),
 	), [][]int{
 		{0, 0, 0},
 		{1, 0, 0},
@@ -54,7 +54,7 @@ func TestCatchError(t *testing.T) {
 			return v, nil
 		}),
 		rxgo.CatchError2[int](func(err error) rxgo.Observable[string] {
-			return rxgo.From([]string{"I", "II", "III", "IV", "V"})
+			return rxgo.From[string]([]string{"I", "II", "III", "IV", "V"})
 		}),
 	), []rxgo.Either[int, string]{
 		rxgo.NewA[string](2),
@@ -83,7 +83,7 @@ func TestDistinct(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
 	assertItem(t, rxgo.Pipe1(
-		rxgo.From([]int{1, 1, 2, 2, 2, 1, 2, 3, 4, 3, 2, 1}),
+		rxgo.From[int]([]int{1, 1, 2, 2, 2, 1, 2, 3, 4, 3, 2, 1}),
 		rxgo.Distinct(func(v int) int {
 			return v
 		}),
@@ -95,7 +95,7 @@ func TestDistinct(t *testing.T) {
 	}
 
 	assertItem(t, rxgo.Pipe1(
-		rxgo.From([]user{
+		rxgo.From[user]([]user{
 			{"Foo", 4},
 			{"Bar", 7},
 			{"Foo", 5},
@@ -110,7 +110,7 @@ func TestDistinctUntilChanged(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
 	assertItem(t, rxgo.Pipe1(
-		rxgo.From([]int{1, 1, 1, 2, 2, 2, 1, 1, 3, 3}),
+		rxgo.Of(1, 1, 1, 2, 2, 2, 1, 1, 3, 3),
 		rxgo.DistinctUntilChanged[int](),
 	), []int{1, 2, 1, 3})
 }
@@ -158,7 +158,7 @@ func TestForkJoin(t *testing.T) {
 
 	assertItem(t, rxgo.ForkJoin(
 		rxgo.Empty[int](),
-		rxgo.From([]int{1, 2, 3, 4, 7, 8, 9, 10, 11, 14}),
+		rxgo.Of(1, 2, 3, 4, 7, 8, 9, 10, 11, 14),
 		rxgo.Timer[int](time.Second),
 	), [][]int{})
 }
@@ -175,7 +175,7 @@ func TestIsEmpty(t *testing.T) {
 
 	t.Run("Not empty", func(t *testing.T) {
 		assertItem(t, rxgo.Pipe1(
-			rxgo.From([]int{1}),
+			rxgo.Of(1),
 			rxgo.IsEmpty[int](),
 		), []bool{false})
 	})
@@ -197,7 +197,7 @@ func TestReduce(t *testing.T) {
 
 	t.Run("Negative values", func(t *testing.T) {
 		assertItem(t, rxgo.Pipe1(
-			rxgo.From([]int{-88, 1, 2, -3, 888}),
+			rxgo.Of(-88, 1, 2, -3, 888),
 			rxgo.Reduce(func(acc int, v int, _ int) int {
 				return acc + v
 			}, int(0)),
@@ -206,7 +206,7 @@ func TestReduce(t *testing.T) {
 
 	t.Run("Positive values", func(t *testing.T) {
 		assertItem(t, rxgo.Pipe1(
-			rxgo.From([]uint{100, 1, 2, 888}),
+			rxgo.From[uint]([]uint{100, 1, 2, 888}),
 			rxgo.Reduce(func(acc uint, v uint, _ int) uint {
 				return acc + v
 			}, uint(0)),
@@ -218,7 +218,7 @@ func TestSingle(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
 	assertItem(t, rxgo.Pipe1(
-		rxgo.From([]string{"Ben", "Tracy", "Laney", "Lily"}),
+		rxgo.From[string]([]string{"Ben", "Tracy", "Laney", "Lily"}),
 		rxgo.Single(func(v string, _ int) bool {
 			return strings.HasPrefix(v, "B")
 		}),
@@ -226,7 +226,7 @@ func TestSingle(t *testing.T) {
 
 	t.Run("Empty", func(t *testing.T) {
 		isError(t, rxgo.Pipe1(
-			rxgo.From([]string{}),
+			rxgo.From[string]([]string{}),
 			rxgo.Single(func(v string, _ int) bool {
 				return strings.HasPrefix(v, "B")
 			}),
@@ -235,7 +235,7 @@ func TestSingle(t *testing.T) {
 
 	t.Run("Too many value matched", func(t *testing.T) {
 		isError(t, rxgo.Pipe1(
-			rxgo.From([]string{"Ben", "Tracy", "Bradley", "Lily"}),
+			rxgo.From[string]([]string{"Ben", "Tracy", "Bradley", "Lily"}),
 			rxgo.Single(func(v string, _ int) bool {
 				return strings.HasPrefix(v, "B")
 			}),
@@ -244,7 +244,7 @@ func TestSingle(t *testing.T) {
 
 	t.Run("Not found", func(t *testing.T) {
 		isError(t, rxgo.Pipe1(
-			rxgo.From([]string{"Lance", "Lily"}),
+			rxgo.From[string]([]string{"Lance", "Lily"}),
 			rxgo.Single(func(v string, _ int) bool {
 				return strings.HasPrefix(v, "B")
 			}),
@@ -256,7 +256,7 @@ func TestSkipLast(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
 	assertItem(t, rxgo.Pipe1(
-		rxgo.From([]string{"a", "b", "c", "d", "e", "f"}),
+		rxgo.Of("a", "b", "c", "d", "e", "f"),
 		rxgo.SkipLast[string](3),
 	), []string{"a", "b", "c"})
 }
@@ -265,7 +265,7 @@ func TestScan(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
 	assertItem(t, rxgo.Pipe1(
-		rxgo.From([]int{1, 2, 3}),
+		rxgo.Of(1, 2, 3),
 		rxgo.Scan(func(acc int, v int, _ int) int {
 			return acc + v
 		}, 0)), []int{1, 3, 6})
@@ -275,7 +275,7 @@ func TestTakeLast(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
 	assertItem(t, rxgo.Pipe1(
-		rxgo.From([]string{"a", "b", "c", "d", "e", "f"}),
+		rxgo.From[string]([]string{"a", "b", "c", "d", "e", "f"}),
 		rxgo.TakeLast[string](1),
 	), []string{"f"})
 }
@@ -284,7 +284,7 @@ func TestMin(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
 	assertItem(t, rxgo.Pipe1(
-		rxgo.From([]int{-88, 1, 2, 3}),
+		rxgo.Of(-88, 1, 2, 3),
 		rxgo.Min[int](),
 	), []int{-88})
 }
@@ -293,7 +293,7 @@ func TestMax(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
 	assertItem(t, rxgo.Pipe1(
-		rxgo.From([]int{-88, 1, 2, 3, 888}),
+		rxgo.Of(-88, 1, 2, 3, 888),
 		rxgo.Max[int](),
 	), []int{888})
 }

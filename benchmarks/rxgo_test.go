@@ -44,7 +44,7 @@ func BenchmarkRx(b *testing.B) {
 	b.Run("rxgo", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			rxgo.Pipe2(
-				rxgo.From(arr),
+				rxgo.From[int](arr),
 				rxgo.Filter(func(v int) bool {
 					return v%2 == 0
 				}),
@@ -82,7 +82,7 @@ func BenchmarkRx(b *testing.B) {
 		b.Run("Skip", func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				rxgo.Pipe1(
-					rxgo.From(arr),
+					rxgo.From[int](arr),
 					rxgo.Skip[int](50),
 				).SubscribeOn(
 					func(v int) {},
@@ -94,7 +94,7 @@ func BenchmarkRx(b *testing.B) {
 		b.Run("Filter", func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				rxgo.Pipe1(
-					rxgo.From(arr),
+					rxgo.From[int](arr),
 					rxgo.Filter(func(v int) bool {
 						return v%2 == 0
 					}),
@@ -108,7 +108,7 @@ func BenchmarkRx(b *testing.B) {
 		b.Run("Take", func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				rxgo.Pipe1(
-					rxgo.From(arr),
+					rxgo.From[int](arr),
 					rxgo.Take[int](2),
 				).SubscribeOn(
 					func(v int) {},
@@ -120,7 +120,7 @@ func BenchmarkRx(b *testing.B) {
 		b.Run("TakeLast", func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				rxgo.Pipe1(
-					rxgo.From(arr),
+					rxgo.From[int](arr),
 					rxgo.TakeLast[int](1),
 				).SubscribeOn(
 					func(v int) {},
@@ -132,7 +132,7 @@ func BenchmarkRx(b *testing.B) {
 		b.Run("Map", func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				rxgo.Pipe1(
-					rxgo.From(arr),
+					rxgo.From[int](arr),
 					rxgo.Map(func(v int, _ int) string {
 						return strconv.Itoa(v)
 					}),
@@ -146,7 +146,7 @@ func BenchmarkRx(b *testing.B) {
 		b.Run("IgnoreElements", func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				rxgo.Pipe1(
-					rxgo.From(arr),
+					rxgo.From[int](arr),
 					rxgo.IgnoreElements[int](),
 				).SubscribeOn(
 					func(v int) {},

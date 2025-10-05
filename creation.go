@@ -1,6 +1,7 @@
 package rxgo
 
 import (
+	"iter"
 	"time"
 )
 
@@ -37,9 +38,56 @@ func Interval(duration time.Duration) Observable[int] {
 	})
 }
 
-func From[T any](items []T) Observable[T] {
+// Creates an Observable from an Array, an array-like object, an iterable object, or an Observable-like object.
+func From[T any, V Iterator[T]](items V) Observable[T] {
 	return (ObservableFunc[T])(func(yield func(T, error) bool) {
-		for _, v := range items {
+		switch vi := any(items).(type) {
+		case []T:
+			for _, v := range vi {
+				if !yield(v, nil) {
+					return
+				}
+			}
+		case chan T:
+			for v := range vi {
+				if !yield(v, nil) {
+					return
+				}
+			}
+		case <-chan T:
+			for v := range vi {
+				if !yield(v, nil) {
+					return
+				}
+			}
+		case iter.Seq[T]:
+			for v := range vi {
+				if !yield(v, nil) {
+					return
+				}
+			}
+		case iter.Seq2[T, error]:
+			for v, err := range vi {
+				if err != nil {
+					var zero T
+					yield(zero, err)
+					return
+				}
+				if !yield(v, nil) {
+					return
+				}
+			}
+		default:
+			panic("unreachable")
+		}
+	})
+}
+
+func FromChannel[T any, C interface {
+	chan T | <-chan T
+}](items C) Observable[T] {
+	return (ObservableFunc[T])(func(yield func(T, error) bool) {
+		for v := range items {
 			if !yield(v, nil) {
 				return
 			}
