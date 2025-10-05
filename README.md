@@ -96,7 +96,7 @@ import (
 
 func main() {
     rxgo.Pipe2(
-		rxgo.Of([]int{1, 1, 1, 2, 2, 2, 1, 1, 3, 3}),
+		rxgo.Of(1, 1, 1, 2, 2, 2, 1, 1, 3, 3),
 		rxgo.DistinctUntilChanged[int](),
 		rxgo.ToSlice[int](),
 	).Subscribe(func(v []int) {

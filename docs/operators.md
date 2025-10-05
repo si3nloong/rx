@@ -2,13 +2,13 @@
 
 ## Creation Operators
 
-- [Defer](/docs/defer.md)
-- [Empty](/docs/empty.md)
-- [Interval](/docs/interval.md)
-- [Of](/docs/of.md)
-- [Range](/docs/range.md)
-- [ThrowError](/docs/throwError.md)
-- [Timer](/docs/timer.md)
+- [Defer](/docs/Defer.md)
+- [Empty](/docs/Empty.md)
+- [Interval](/docs/Interval.md)
+- [Of](/docs/Of.md)
+- [Range](/docs/Range.md)
+- [ThrowError](/docs/ThrowError.md)
+- [Timer](/docs/Timer.md)
 - Iif
 
 ## Join Creation Operators
@@ -84,7 +84,7 @@
 
 ## Utility Operators
 
-- Tap
+- [Tap](/docs/Tap.md)
 - Delay
 - DelayWhen
 <!-- Dematerialize -->
@@ -95,7 +95,7 @@
 - Timestamp
 <!-- Timeout -->
 <!-- TimeoutWith -->
-- ToSlice
+- [ToSlice](/docs/ToSlice.md)
 
 ## Conditional and Boolean Operators
 
@@ -107,7 +107,7 @@
 
 ## Mathematical and Aggregate Operators
 
-- [Count](/docs/count.md)
-- [Max](/docs/max.md)
-- [Min](/docs/min.md)
-- [Reduce](/docs/reduce.md)
+- [Count](/docs/Count.md)
+- [Max](/docs/Max.md)
+- [Min](/docs/Min.md)
+- [Reduce](/docs/Reduce.md)
