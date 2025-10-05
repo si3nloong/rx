@@ -95,17 +95,16 @@ import (
 )
 
 func main() {
-    rxgo.Pipe2(
+    for v, err := rxgo.Pipe1(
 		rxgo.Of(1, 1, 1, 2, 2, 2, 1, 1, 3, 3),
 		rxgo.DistinctUntilChanged[int](),
-		rxgo.ToSlice[int](),
-	).Subscribe(func(v []int) {
-		log.Println(v)
-	}, func(err error) {
-		println("Error ->", err)
-	}, func() {
-		println("Completed!")
-	})
+	) {
+		if err != nil {
+			panic(err)
+		}
+		println(v)
+	}
+	println("Completed!")
     // 1, 2, 1, 3, Completed!
 
 	rxgo.Pipe3(
