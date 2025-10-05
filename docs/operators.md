@@ -6,19 +6,20 @@
 - [Empty](/docs/Empty.md)
 - [Interval](/docs/Interval.md)
 - [Of](/docs/Of.md)
+- [From](/docs/From.md)
 - [Range](/docs/Range.md)
 - [ThrowError](/docs/ThrowError.md)
 - [Timer](/docs/Timer.md)
-- Iif
+- [Iif]()
 
 ## Join Creation Operators
 
-- CombineLatest
-- Concat
-- ForkJoin
+- [CombineLatest]()
+- [Concat]()
+- [ForkJoin]()
+- [Race]()
 <!-- Merge -->
 <!-- Partition -->
-- Race
 <!-- Zip -->
 
 ## Transformation Operators
@@ -99,11 +100,11 @@
 
 ## Conditional and Boolean Operators
 
-- DefaultIfEmpty
-- Every
-- Find
-- FindIndex
-- IsEmpty
+- [DefaultIfEmpty]()
+- [Every]()
+- [Find]()
+- [FindIndex]()
+- [IsEmpty]()
 
 ## Mathematical and Aggregate Operators
 

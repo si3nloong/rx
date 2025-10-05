@@ -13,7 +13,10 @@
 ## Example
 
 ```go
-for v, _ := range rxgo.Of(1, 2, 3, 4) {
+for v, _ := range rxgo.Pipe1(
+    rxgo.Of(1, 2, 3, 4),
+    rxgo.Count(),
+ ) {
     println(v)
 }
 ```

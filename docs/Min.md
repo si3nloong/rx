@@ -12,7 +12,7 @@
 ```go
 for v, _ := range rxgo.Pipe1(
     rxgo.Of(-88, 1, 3, 4),
-    rxgo.Max(),
+    rxgo.Min(),
 ) {
     println(v)
 }

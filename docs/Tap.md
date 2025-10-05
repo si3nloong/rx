@@ -23,7 +23,9 @@ The most common use of `Tap` is actually for debugging.
 ```go
 for v, _ := range rxgo.Pipe1(
     rxgo.Of(1, 3, 4),
-    rxgo.ToSlice(),
+    rxgo.Tap(func() {
+        fmt.Println(v)
+    }),
 ) {
     fmt.Println(v)
 }
@@ -32,5 +34,10 @@ for v, _ := range rxgo.Pipe1(
 Output:
 
 ```
-[1, 3, 4]
+1
+1
+3
+3
+4
+4
 ```
