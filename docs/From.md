@@ -13,10 +13,7 @@
 ## Example
 
 ```go
-for v, _ := range rxgo.Pipe1(
-    rxgo.Of(1, 2, 3, 4),
-    rxgo.Count(),
- ) {
+for v, _ := range rxgo.From([]int{1, 2, 3, 4}).Subscribe() {
     println(v)
 }
 ```
@@ -24,5 +21,8 @@ for v, _ := range rxgo.Pipe1(
 Output:
 
 ```
+1
+2
+3
 4
 ```

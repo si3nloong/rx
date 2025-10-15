@@ -13,7 +13,7 @@ A simple Observable that only emits the complete notification. It can be used fo
 ## Example
 
 ```go
-for v, _ := range rxgo.Empty[string]() {
+for v, _ := range rxgo.Empty[string]().Subscribe() {
     println(v)
 }
 println("Completed!")

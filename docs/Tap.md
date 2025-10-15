@@ -26,7 +26,7 @@ for v, _ := range rxgo.Pipe1(
     rxgo.Tap(func() {
         fmt.Println(v)
     }),
-) {
+).Subscribe() {
     fmt.Println(v)
 }
 ```

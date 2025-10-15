@@ -80,7 +80,7 @@ func FindIndex[T any](predicate func(T, int) bool) OperatorFunc[T, int] {
 				}
 				i++
 			}
-			yield(-1, ErrNotFound)
+			yield(-1, nil)
 		})
 	}
 }

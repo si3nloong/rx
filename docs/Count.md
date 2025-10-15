@@ -13,10 +13,13 @@
 ## Example
 
 ```go
-for v, _ := range rxgo.Pipe1(
+for v, err := range rxgo.Pipe1(
     rxgo.Of(1, 2, 3, 4),
     rxgo.Count(),
- ) {
+).Subscribe() {
+    if err != nil {
+        panic(err)
+    }
     println(v)
 }
 ```

@@ -284,24 +284,20 @@ func MergeMap[T any](fn func(v T, index int) Observable[T]) OperatorFunc[T, T] {
 func Pairwise[T any]() OperatorFunc[T, [2]T] {
 	return func(input Observable[T]) Observable[[2]T] {
 		return (ObservableFunc[[2]T])(func(yield func([2]T, error) bool) {
-			var n int
-			var pair [2]T
+			pair := make([]T, 0, 2)
 			for v, err := range input.Subscribe() {
 				if err != nil {
 					var zero [2]T
 					yield(zero, err)
 					return
 				} else {
-					if n%2 == 0 {
-						pair[1] = v
-						if !yield(pair, nil) {
+					pair = append(pair, v)
+					if len(pair) > 1 {
+						if !yield([2]T(pair), nil) {
 							return
 						}
-						pair = [2]T{}
-					} else {
-						pair[0] = v
+						pair = pair[1:]
 					}
-					n++
 				}
 			}
 		})

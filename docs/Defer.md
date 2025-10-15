@@ -21,7 +21,7 @@ for v, _ := range rxgo.Defer(func() rxgo.Observable[int] {
             }
         }
     })
-}) {
+}).Subscribe() {
     println(v)
 }
 ```

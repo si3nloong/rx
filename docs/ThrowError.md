@@ -15,7 +15,7 @@ This creation function is useful for creating an observable that will create an 
 ```go
 for v, err := range rxgo.ThrowError(func() error {
     return errors.New(`stop`)
-}) {
+}).Subscribe() {
     if err != nil {
         panic("has error")
     }

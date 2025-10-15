@@ -20,7 +20,7 @@ for v, _ := range rxgo.Pipe1(
     rxgo.Reduce(func(acc int, v int, _ int) int {
         return acc + v
     }, 0),
-) {
+).Subscribe() {
     println(v)
 }
 ```

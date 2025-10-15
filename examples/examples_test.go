@@ -115,6 +115,24 @@ func TestDistinctUntilChanged(t *testing.T) {
 	), []int{1, 2, 1, 3})
 }
 
+func TestElementAt(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	t.Run("Valid index", func(t *testing.T) {
+		assertItem(t, rxgo.Pipe1(
+			rxgo.Of(1, 2, 3, 4, 5),
+			rxgo.ElementAt[int](2),
+		), []int{3})
+	})
+
+	t.Run("Invalid index", func(t *testing.T) {
+		isError(t, rxgo.Pipe1(
+			rxgo.Of(1, 2, 3, 4, 5),
+			rxgo.ElementAt[int](10),
+		), rxgo.ErrArgumentOutOfRange)
+	})
+}
+
 func TestEvery(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
@@ -135,6 +153,15 @@ func TestEvery(t *testing.T) {
 			}),
 		), []bool{false})
 	})
+}
+
+func TestFirst(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	assertItem(t, rxgo.Pipe1(
+		rxgo.From[string]([]string{"Ben", "Tracy", "Laney", "Lily"}),
+		rxgo.First[string](),
+	), []string{"Ben"})
 }
 
 func TestFilter(t *testing.T) {
