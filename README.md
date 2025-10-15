@@ -73,7 +73,7 @@ for {
 
 There are operators for different purposes, and they may be categorized as: creation, transformation, filtering, joining, multicasting, error handling, utility, etc.
 
-For a complete overview, see the [operators](/docs/operators.md) page.
+For a complete overview, see the [operators](/docs/operators/README.md) page.
 
 ## Observable Types
 

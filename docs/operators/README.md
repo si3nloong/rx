@@ -17,7 +17,7 @@
 - [CombineLatest](/docs/CombineLatest.md)
 - [Concat](/docs/Concat.md)
 - [ForkJoin](/docs/ForkJoin.md)
-- [Race]()
+- [Race](/docs/Race.md)
 - [Merge]()
 - [Partition]()
 - [Zip](/docs/Zip.md)
@@ -40,7 +40,7 @@
 - MergeScan
 - [Pairwise](/docs/Pairwise.md)
 - Partition
-- Scan
+- [Scan](/docs/Scan.md)
 - SwitchScan
 - SwitchMap
 - SwitchMapTo
@@ -88,14 +88,14 @@
 - [Tap](/docs/Tap.md)
 - Delay
 - DelayWhen
-<!-- Dematerialize -->
-<!-- Materialize -->
-<!-- ObserveOn -->
-<!-- SubscribeOn -->
+- Dematerialize
+- Materialize
+- ObserveOn
+- SubscribeOn
 - [WithTimeInterval]()
 - [Timestamp]()
-- [Timeout]
-- [TimeoutWith]
+- [Timeout]()
+- [TimeoutWith]()
 - [ToSlice](/docs/ToSlice.md)
 
 ## Conditional and Boolean Operators
