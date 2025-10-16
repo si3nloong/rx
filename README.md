@@ -83,6 +83,10 @@ In the Rx world, there is a distinction between cold and hot Observables. When t
 
 In RxGo, there is a similar concept.
 
+## Performance
+
+![](/benchmarks/result.png)
+
 ## Example
 
 ```go

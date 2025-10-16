@@ -1,4 +1,4 @@
-package rxgo
+package rx
 
 func DefaultIfEmpty[T any](defaultValue T) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {

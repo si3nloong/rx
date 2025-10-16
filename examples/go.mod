@@ -3,7 +3,7 @@ module examples
 go 1.25.0
 
 require (
-	github.com/si3nloong/rx v0.0.0-20251003121307-c36a1eaafb6b
+	github.com/si3nloong/rx v0.0.0-20251016023653-7a4bacd24943
 	github.com/stretchr/testify v1.8.0
 	go.uber.org/goleak v1.3.0
 )

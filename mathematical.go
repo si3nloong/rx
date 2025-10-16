@@ -1,4 +1,4 @@
-package rxgo
+package rx
 
 func Count[T Number](predicate ...func(value T, index int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {

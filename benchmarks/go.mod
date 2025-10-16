@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/reactivex/rxgo/v2 v2.5.0
 	github.com/samber/ro v0.1.0
-	github.com/si3nloong/rx v0.0.0-20251001105722-c935f631370c
+	github.com/si3nloong/rx v0.0.0-20251016023653-7a4bacd24943
 )
 
 require (

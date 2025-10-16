@@ -1,4 +1,4 @@
-package rxgo
+package rx
 
 func StartWith[T any](values ...T) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
