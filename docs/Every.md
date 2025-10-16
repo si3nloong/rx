@@ -11,9 +11,9 @@
 ## Example
 
 ```go
-for v, err := range rxgo.Pipe1(
-    rxgo.Of(1, 1, 1, 1, 1, 3, 3),
-    rxgo.Every(func(v int, _ int) bool {
+for v, err := range rx.Pipe1(
+    rx.Of(1, 1, 1, 1, 1, 3, 3),
+    rx.Every(func(v int, _ int) bool {
         return v%2 != 0
     }),
 ).Subscribe() {

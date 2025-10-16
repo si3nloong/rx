@@ -15,9 +15,9 @@ Returns an Observable that applies a specified accumulator function to each item
 ## Example
 
 ```go
-for v, _ := range rxgo.Pipe1(
-    rxgo.Of(1, 3, 4),
-    rxgo.Reduce(func(acc int, v int, _ int) int {
+for v, _ := range rx.Pipe1(
+    rx.Of(1, 3, 4),
+    rx.Reduce(func(acc int, v int, _ int) int {
         return acc + v
     }, 0),
 ).Subscribe() {

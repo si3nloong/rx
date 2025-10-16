@@ -13,7 +13,7 @@ This creation function is useful for creating an observable that will create an 
 ## Example
 
 ```go
-for v, err := range rxgo.ThrowError(func() error {
+for v, err := range rx.ThrowError(func() error {
     return errors.New(`stop`)
 }).Subscribe() {
     if err != nil {

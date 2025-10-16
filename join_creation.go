@@ -7,7 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/si3nloong/rxgo/internal/errgroup"
+	"github.com/si3nloong/rx/internal/errgroup"
 )
 
 func CombineLatest[T any](inputs ...Observable[T]) Observable[[]T] {

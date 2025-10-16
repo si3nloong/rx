@@ -13,9 +13,9 @@ This operator applies a projection to each value and emits that projection in th
 ## Example
 
 ```go
-for v, err := range rxgo.Pipe1(
-    rxgo.Of(1, 88, 100),
-    rxgo.Map(func(v int, _ int) string {
+for v, err := range rx.Pipe1(
+    rx.Of(1, 88, 100),
+    rx.Map(func(v int, _ int) string {
         return strconv.Itoa(v)
     }),
 ).Subscribe() {

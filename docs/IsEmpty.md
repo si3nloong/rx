@@ -15,9 +15,9 @@ A similar effect could be achieved with `Count`, but isEmpty can emit a `false` 
 ## Example
 
 ```go
-for v, _ := range rxgo.Pipe1(
-    rxgo.Empty[string](),
-    rxgo.IsEmpty(),
+for v, _ := range rx.Pipe1(
+    rx.Empty[string](),
+    rx.IsEmpty(),
 ).Subscribe() {
     println(v)
 }

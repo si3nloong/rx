@@ -21,9 +21,9 @@ The most common use of `Tap` is actually for debugging.
 ## Example
 
 ```go
-for v, _ := range rxgo.Pipe1(
-    rxgo.Of(1, 3, 4),
-    rxgo.Tap(func() {
+for v, _ := range rx.Pipe1(
+    rx.Of(1, 3, 4),
+    rx.Tap(func() {
         fmt.Println(v)
     }),
 ).Subscribe() {

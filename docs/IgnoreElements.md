@@ -13,9 +13,9 @@ If you do not care about the items being emitted by an Observable, but you do wa
 ## Example
 
 ```go
-for v, _ := range rxgo.Pipe1(
-    rxgo.Of("You", "talking", "to", "me"),
-    rxgo.IgnoreElements(),
+for v, _ := range rx.Pipe1(
+    rx.Of("You", "talking", "to", "me"),
+    rx.IgnoreElements(),
 ).Subscribe() {
     println(v)
 }

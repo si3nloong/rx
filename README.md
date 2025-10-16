@@ -20,7 +20,7 @@ An operator is a function that defines an Observable, how and when it should emi
 ## Installation
 
 ```go
-go get -u github.com/si3nloong/rxgo
+go get -u github.com/si3nloong/rx
 ```
 
 ## Getting Started
@@ -30,7 +30,7 @@ There is no magic under the hood, an observable is just a [Go iterator](https://
 You can create an Observable as easy as :
 
 ```go
-observable := rxgo.ObservableFunc[string](func(yield func(string, error) bool) {
+observable := rx.ObservableFunc[string](func(yield func(string, error) bool) {
 	if !yield("hello", nil) {
 		return
 	}
@@ -89,13 +89,13 @@ In RxGo, there is a similar concept.
 package main
 
 import (
-	"github.com/si3nloong/rxgo"
+	"github.com/si3nloong/rx"
 )
 
 func main() {
-    for v, err := rxgo.Pipe1(
-		rxgo.Of(1, 1, 1, 2, 2, 2, 1, 1, 3, 3),
-		rxgo.DistinctUntilChanged[int](),
+    for v, err := rx.Pipe1(
+		rx.Of(1, 1, 1, 2, 2, 2, 1, 1, 3, 3),
+		rx.DistinctUntilChanged[int](),
 	) {
 		if err != nil {
 			panic(err)

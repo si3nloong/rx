@@ -13,7 +13,7 @@
 ## Example
 
 ```go
-for v, _ := range rxgo.Range(1, 5).Subscribe() {
+for v, _ := range rx.Range(1, 5).Subscribe() {
     println(v)
 }
 ```

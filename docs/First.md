@@ -13,9 +13,9 @@ If called with no arguments, first emits the first value of the source Observabl
 ## Example
 
 ```go
-for v, _ := range rxgo.Pipe1(
-    rxgo.From[string]([]string{"Ben", "Tracy", "Laney", "Lily"}),
-    rxgo.First[string](),
+for v, _ := range rx.Pipe1(
+    rx.From[string]([]string{"Ben", "Tracy", "Laney", "Lily"}),
+    rx.First[string](),
 ).Subscribe() {
     println(v)
 }

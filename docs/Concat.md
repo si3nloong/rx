@@ -21,9 +21,9 @@ If you pass to `Concat` the same Observable many times, its stream of values wil
 ## Example
 
 ```go
-for v, err := range rxgo.Concat(
-    rxgo.Pipe1(rxgo.Interval(time.Second), rxgo.Take(2)),
-    rxgo.Pipe1(rxgo.Interval(time.Second), rxgo.Take(2)),
+for v, err := range rx.Concat(
+    rx.Pipe1(rx.Interval(time.Second), rx.Take(2)),
+    rx.Pipe1(rx.Interval(time.Second), rx.Take(2)),
 ).Subscribe() {
     if err != nil {
         panic(err)

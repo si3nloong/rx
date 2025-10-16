@@ -13,9 +13,9 @@
 ## Example
 
 ```go
-for v, err := range rxgo.Pipe1(
-    rxgo.Of(1, 2, 3, 4, 7, 8, 9, 10, 11, 14),
-    rxgo.FindIndex(func(v int, _ int) bool {
+for v, err := range rx.Pipe1(
+    rx.Of(1, 2, 3, 4, 7, 8, 9, 10, 11, 14),
+    rx.FindIndex(func(v int, _ int) bool {
         return v > 20
     }),
 ).Subscribe() {

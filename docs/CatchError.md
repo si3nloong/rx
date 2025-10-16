@@ -14,16 +14,16 @@ This operator handles errors, but forwards along all other events to the resulti
 ## Example
 
 ```go
-for v, err := range rxgo.Pipe2(
-    rxgo.Of(1, 2, 3, 4, 5),
-    rxgo.Map2(func(v int, _ int) (int, error) {
+for v, err := range rx.Pipe2(
+    rx.Of(1, 2, 3, 4, 5),
+    rx.Map2(func(v int, _ int) (int, error) {
         if v == 4 {
             return 0, errors.New(`four`)
         }
         return v, nil
     }),
-    rxgo.CatchError2[int](func(err error) rxgo.Observable[string] {
-        return rxgo.From[string]([]string{"I", "II", "III", "IV", "V"})
+    rx.CatchError2[int](func(err error) rx.Observable[string] {
+        return rx.From[string]([]string{"I", "II", "III", "IV", "V"})
     }),
 ).Subscribe() {
     if err != nil {

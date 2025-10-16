@@ -15,9 +15,9 @@ Buffers a number of values from the source Observable by bufferSize then emits t
 ```go
 import "fmt"
 
-for v, err := range rxgo.Pipe1(
-    rxgo.From[int]([]int{1, 3, 4, 5, 9}),
-    rxgo.BufferCount[int](2),
+for v, err := range rx.Pipe1(
+    rx.From[int]([]int{1, 3, 4, 5, 9}),
+    rx.BufferCount[int](2),
 ).Subscribe() {
     if err != nil {
         panic(err)

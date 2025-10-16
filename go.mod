@@ -1,3 +1,3 @@
-module github.com/si3nloong/rxgo
+module github.com/si3nloong/rx
 
 go 1.25.0

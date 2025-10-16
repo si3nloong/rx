@@ -13,9 +13,9 @@ This operator takes values from the source Observable, passes them through a pre
 ## Example
 
 ```go
-for v, err := range rxgo.Pipe1(
-    rxgo.Of(1, 2, 3, 4, 7, 8, 9, 10, 11, 14),
-    rxgo.Filter(func(v int) bool {
+for v, err := range rx.Pipe1(
+    rx.Of(1, 2, 3, 4, 7, 8, 9, 10, 11, 14),
+    rx.Filter(func(v int) bool {
         return v%2 == 0
     }),
 ).Subscribe() {

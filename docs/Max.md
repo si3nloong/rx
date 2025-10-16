@@ -10,9 +10,9 @@
 ## Example
 
 ```go
-for v, _ := range rxgo.Pipe1(
-    rxgo.Of(1, 3, 4),
-    rxgo.Max(),
+for v, _ := range rx.Pipe1(
+    rx.Of(1, 3, 4),
+    rx.Max(),
 ) {
     println(v)
 }

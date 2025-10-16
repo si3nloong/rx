@@ -13,7 +13,7 @@
 ## Example
 
 ```go
-for v, _ := range rxgo.Interval(time.Second) {
+for v, _ := range rx.Interval(time.Second) {
     println(v)
 }
 ```

@@ -3,7 +3,7 @@ module examples
 go 1.25.0
 
 require (
-	github.com/si3nloong/rxgo v0.0.0-20251003121307-c36a1eaafb6b
+	github.com/si3nloong/rx v0.0.0-20251003121307-c36a1eaafb6b
 	github.com/stretchr/testify v1.8.0
 	go.uber.org/goleak v1.3.0
 )
@@ -15,4 +15,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/si3nloong/rxgo => ../
+replace github.com/si3nloong/rx => ../

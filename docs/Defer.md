@@ -13,8 +13,8 @@
 ## Example
 
 ```go
-for v, _ := range rxgo.Defer(func() rxgo.Observable[int] {
-    return rxgo.ObservableFunc[int](func(yield func(int, error) bool) {
+for v, _ := range rx.Defer(func() rx.Observable[int] {
+    return rx.ObservableFunc[int](func(yield func(int, error) bool) {
         for i := 0; i < 10; i++ {
             if !yield(i, nil) {
                 return

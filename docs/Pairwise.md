@@ -15,9 +15,9 @@ The Nth emission from the source Observable will cause the output Observable to 
 ```go
 import "fmt"
 
-for result, err := range rxgo.Pipe1(
-    rxgo.Of(1, 2, 3, 4, 5),
-    rxgo.Pairwise[int](),
+for result, err := range rx.Pipe1(
+    rx.Of(1, 2, 3, 4, 5),
+    rx.Pairwise[int](),
 ).Subscribe() {
     if err != nil {
         panic(err)

@@ -15,10 +15,10 @@ If one of the used source observable throws an errors before a first notificatio
 ## Example
 
 ```go
-for result, err := range rxgo.Race(
-    rxgo.Pipe1(rxgo.Interval(time.Second*7), rxgo.Map(func(_ int, _ int) string { return "slow one" })),
-    rxgo.Pipe1(rxgo.Interval(time.Second*3), rxgo.Map(func(_ int, _ int) string { return "fast one" })),
-    rxgo.Pipe1(rxgo.Interval(time.Second*5), rxgo.Map(func(_ int, _ int) string { return "medium one" })),
+for result, err := range rx.Race(
+    rx.Pipe1(rx.Interval(time.Second*7), rx.Map(func(_ int, _ int) string { return "slow one" })),
+    rx.Pipe1(rx.Interval(time.Second*3), rx.Map(func(_ int, _ int) string { return "fast one" })),
+    rx.Pipe1(rx.Interval(time.Second*5), rx.Map(func(_ int, _ int) string { return "medium one" })),
 ).Subscribe() {
     if err != nil {
         panic(err)

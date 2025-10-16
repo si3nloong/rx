@@ -13,9 +13,9 @@
 ## Example
 
 ```go
-for v, err := range rxgo.Pipe1(
-    rxgo.Of(1, 2, 3, 4, 5),
-    rxgo.ElementAt[int](2),
+for v, err := range rx.Pipe1(
+    rx.Of(1, 2, 3, 4, 5),
+    rx.ElementAt[int](2),
 ).Subscribe() {
     if err != nil {
         panic(err)

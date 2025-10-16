@@ -13,7 +13,7 @@ Unlike `From`, it does not do any flattening and emits each argument in whole as
 ## Example
 
 ```go
-for v, _ := range rxgo.Of(1, 2, 3, 4, 5) {
+for v, _ := range rx.Of(1, 2, 3, 4, 5) {
     println(v)
 }
 ```
