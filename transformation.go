@@ -142,7 +142,7 @@ func Map[I, O any](fn func(v I, index int) O) OperatorFunc[I, O] {
 }
 
 // Applies a given project function to each value emitted by the source Observable, and emits the resulting values as an Observable.
-func Map2[I, O any](fn func(v I, index int) (O, error)) OperatorFunc[I, O] {
+func MapErr[I, O any](fn func(v I, index int) (O, error)) OperatorFunc[I, O] {
 	return func(input Observable[I]) Observable[O] {
 		return (ObservableFunc[O])(func(yield func(O, error) bool) {
 			var i int

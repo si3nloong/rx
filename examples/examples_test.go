@@ -47,7 +47,7 @@ func TestCatchError(t *testing.T) {
 		rx.Filter(func(v int) bool {
 			return v%2 == 0
 		}),
-		rx.Map2(func(v int, _ int) (int, error) {
+		rx.MapErr(func(v int, _ int) (int, error) {
 			if v > 10 {
 				return 0, errors.New(`stop la`)
 			}

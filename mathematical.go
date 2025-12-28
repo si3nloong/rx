@@ -30,6 +30,7 @@ func Count[T Number](predicate ...func(value T, index int) bool) OperatorFunc[T,
 			}
 
 			yield(count, nil)
+			count = 0
 		})
 	}
 }

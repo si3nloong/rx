@@ -10,27 +10,32 @@ func CatchError[T any](selector func(error) Observable[T]) OperatorFunc[T, T] {
 			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
+			iter2 := func(err error) {
+				next2, stop2 := iter.Pull2(selector(err).Subscribe())
+				defer stop2()
+
+				for {
+					v2, err2, ok2 := next2()
+					if err2 != nil {
+						var zero T
+						if !yield(zero, err2) {
+							return
+						}
+					} else if !ok2 {
+						return
+					} else {
+						if !yield(v2, nil) {
+							return
+						}
+					}
+				}
+			}
+
 			for {
 				v, err, ok := next()
 				if err != nil {
-					next2, stop2 := iter.Pull2(selector(err).Subscribe())
-					defer stop2()
-
-					for {
-						v2, err2, ok2 := next2()
-						if err2 != nil {
-							var zero T
-							if !yield(zero, err2) {
-								return
-							}
-						} else if !ok2 {
-							return
-						} else {
-							if !yield(v2, nil) {
-								return
-							}
-						}
-					}
+					iter2(err)
+					return
 				} else if !ok {
 					return
 				} else {
@@ -49,25 +54,30 @@ func CatchError2[I, O any](selector func(error) Observable[O]) OperatorFunc[I, E
 			next, stop := iter.Pull2(input.Subscribe())
 			defer stop()
 
+			iter2 := func(err error) {
+				next2, stop2 := iter.Pull2(selector(err).Subscribe())
+				defer stop2()
+
+				for {
+					v2, err2, ok2 := next2()
+					if err2 != nil {
+						yield(Either[I, O]{}, err2)
+						return
+					} else if !ok2 {
+						return
+					} else {
+						if !yield(Either[I, O]{v: v2}, nil) {
+							return
+						}
+					}
+				}
+			}
+
 			for {
 				v, err, ok := next()
 				if err != nil {
-					next2, stop2 := iter.Pull2(selector(err).Subscribe())
-					defer stop2()
-
-					for {
-						v2, err2, ok2 := next2()
-						if err2 != nil {
-							yield(Either[I, O]{}, err2)
-							return
-						} else if !ok2 {
-							return
-						} else {
-							if !yield(Either[I, O]{v: v2}, nil) {
-								return
-							}
-						}
-					}
+					iter2(err)
+					return
 				} else if !ok {
 					return
 				} else {

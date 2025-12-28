@@ -25,6 +25,7 @@ func Skip[T any](count uint) OperatorFunc[T, T] {
 					}
 				}
 			}
+			skipCount = 0
 		})
 	}
 }
@@ -52,6 +53,7 @@ func SkipLast[T any](count uint) OperatorFunc[T, T] {
 					}
 				}
 			}
+			result = nil
 		})
 	}
 }
@@ -74,6 +76,7 @@ func SkipWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 				}
 				i++
 			}
+			i = 0
 		})
 	}
 }

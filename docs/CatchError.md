@@ -16,7 +16,7 @@ This operator handles errors, but forwards along all other events to the resulti
 ```go
 for v, err := range rx.Pipe2(
     rx.Of(1, 2, 3, 4, 5),
-    rx.Map2(func(v int, _ int) (int, error) {
+    rx.MapErr(func(v int, _ int) (int, error) {
         if v == 4 {
             return 0, errors.New(`four`)
         }

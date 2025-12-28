@@ -9,9 +9,11 @@ import (
 func AuditTime[T any](duration time.Duration) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
-			var latestValue T
-			var stopped bool
-			var timer *time.Timer
+			var (
+				latestValue T
+				stopped     bool
+				timer       *time.Timer
+			)
 			defer func() {
 				if timer != nil {
 					timer.Stop()
@@ -198,7 +200,7 @@ func Filter[T any](fn func(v T) bool) OperatorFunc[T, T] {
 	}
 }
 
-func Filter2[T any](fn func(v T) (bool, error)) OperatorFunc[T, T] {
+func FilterErr[T any](fn func(v T) (bool, error)) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
 			for v, err := range input.Subscribe() {

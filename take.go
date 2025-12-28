@@ -26,6 +26,7 @@ func Take[T any](count uint) OperatorFunc[T, T] {
 					}
 				}
 			}
+			takeCount = 0
 		})
 	}
 }
@@ -53,6 +54,7 @@ func TakeLast[T any](count uint) OperatorFunc[T, T] {
 					return
 				}
 			}
+			result = nil
 		})
 	}
 }
@@ -76,6 +78,7 @@ func TakeWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 				}
 				i++
 			}
+			i = 0
 		})
 	}
 }
