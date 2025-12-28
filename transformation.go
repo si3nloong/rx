@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Buffer buffers the source Observable values until closingNotifier emits.
 func Buffer[T any, I any](closingNotifier Observable[I]) OperatorFunc[T, []T] {
 	return func(input Observable[T]) Observable[[]T] {
 		return (ObservableFunc[[]T])(func(yield func([]T, error) bool) {
@@ -59,6 +60,7 @@ func Buffer[T any, I any](closingNotifier Observable[I]) OperatorFunc[T, []T] {
 	}
 }
 
+// BufferCount buffers the source Observable values into a slice of a specific size.
 func BufferCount[T any](count uint) OperatorFunc[T, []T] {
 	return func(input Observable[T]) Observable[[]T] {
 		return (ObservableFunc[[]T])(func(yield func([]T, error) bool) {
@@ -120,7 +122,7 @@ func BufferTime[T any](duration time.Duration) OperatorFunc[T, []T] {
 	}
 }
 
-// Applies a given project function to each value emitted by the source Observable, and emits the resulting values as an Observable.
+// Map applies a given project function to each value emitted by the source Observable, and emits the resulting values as an Observable.
 func Map[I, O any](fn func(v I, index int) O) OperatorFunc[I, O] {
 	return func(input Observable[I]) Observable[O] {
 		return (ObservableFunc[O])(func(yield func(O, error) bool) {
@@ -141,7 +143,7 @@ func Map[I, O any](fn func(v I, index int) O) OperatorFunc[I, O] {
 	}
 }
 
-// Applies a given project function to each value emitted by the source Observable, and emits the resulting values as an Observable.
+// MapErr is similar to Map but deals with error.
 func MapErr[I, O any](fn func(v I, index int) (O, error)) OperatorFunc[I, O] {
 	return func(input Observable[I]) Observable[O] {
 		return (ObservableFunc[O])(func(yield func(O, error) bool) {
@@ -167,7 +169,7 @@ func MapErr[I, O any](fn func(v I, index int) (O, error)) OperatorFunc[I, O] {
 	}
 }
 
-// Projects each source value to an Observable which is merged in the output Observable, in a serialized fashion waiting for each one to complete before merging the next.
+// ConcatMap projects each source value to an Observable which is merged in the output Observable, in a serialized fashion waiting for each one to complete before merging the next.
 func ConcatMap[I, O any](project func(v I, index int) Observable[O]) OperatorFunc[I, O] {
 	return func(input Observable[I]) Observable[O] {
 		return (ObservableFunc[O])(func(yield func(O, error) bool) {
@@ -195,6 +197,7 @@ func ConcatMap[I, O any](project func(v I, index int) Observable[O]) OperatorFun
 	}
 }
 
+// SwitchMap projects each source value to an Observable which is merged in the output Observable, emitting values only from the most recently projected Observable.
 func SwitchMap[I, O any](fn func(v I, index int) Observable[O]) OperatorFunc[I, O] {
 	return func(input Observable[I]) Observable[O] {
 		return (ObservableFunc[O])(func(yield func(O, error) bool) {
@@ -239,6 +242,7 @@ func SwitchMap[I, O any](fn func(v I, index int) Observable[O]) OperatorFunc[I, 
 	}
 }
 
+// MergeMap projects each source value to an Observable which is merged in the output Observable.
 func MergeMap[T any](fn func(v T, index int) Observable[T]) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -281,6 +285,7 @@ func MergeMap[T any](fn func(v T, index int) Observable[T]) OperatorFunc[T, T] {
 	}
 }
 
+// Pairwise groups pairs of consecutive emissions together and emits them as an array of two values.
 func Pairwise[T any]() OperatorFunc[T, [2]T] {
 	return func(input Observable[T]) Observable[[2]T] {
 		return (ObservableFunc[[2]T])(func(yield func([2]T, error) bool) {
@@ -304,6 +309,7 @@ func Pairwise[T any]() OperatorFunc[T, [2]T] {
 	}
 }
 
+// Scan applies an accumulator function over the source Observable, and returns each intermediate result, with the specified seed as the initial accumulator value.
 func Scan[V, A any](accumulator func(acc A, value V, index int) A, seed A) OperatorFunc[V, A] {
 	return func(input Observable[V]) Observable[A] {
 		return (ObservableFunc[A])(func(yield func(A, error) bool) {

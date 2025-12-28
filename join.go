@@ -1,5 +1,6 @@
 package rx
 
+// StartWith returns an Observable that emits the items you specify as arguments before it begins to emit items emitted by the source Observable.
 func StartWith[T any](values ...T) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {

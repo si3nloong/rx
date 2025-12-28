@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-// Returns an Observable that skips the first count items emitted by the source Observable.
+// Skip returns an Observable that skips the first count items emitted by the source Observable.
 func Skip[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -30,7 +30,7 @@ func Skip[T any](count uint) OperatorFunc[T, T] {
 	}
 }
 
-// Skip a specified number of values before the completion of an observable.
+// SkipLast skips a specified number of values before the completion of an observable.
 func SkipLast[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -58,7 +58,7 @@ func SkipLast[T any](count uint) OperatorFunc[T, T] {
 	}
 }
 
-// Returns an Observable that skips all items emitted by the source Observable as long as a specified condition holds true, but emits all further source items as soon as the condition becomes false.
+// SkipWhile returns an Observable that skips all items emitted by the source Observable as long as a specified condition holds true, but emits all further source items as soon as the condition becomes false.
 func SkipWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -81,7 +81,7 @@ func SkipWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 	}
 }
 
-// Returns an Observable that skips items emitted by the source Observable until a second Observable emits an item.
+// SkipUntil returns an Observable that skips items emitted by the source Observable until a second Observable emits an item.
 func SkipUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {

@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Tap performs a side effect for every emission on the source Observable, but returns an Observable that is identical to the source.
 func Tap[T any](fn func(T)) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -24,6 +25,7 @@ func Tap[T any](fn func(T)) OperatorFunc[T, T] {
 	}
 }
 
+// Delay delays the emissions of items from the source Observable by a given timeout or until a given Date.
 func Delay[T any](duration time.Duration) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -43,6 +45,7 @@ func Delay[T any](duration time.Duration) OperatorFunc[T, T] {
 	}
 }
 
+// DelayWhen delays the emission of items from the source Observable by a given time span determined by the emissions of another Observable.
 func DelayWhen[T, R any](delayDurationSelector func(value T, index int) Observable[R]) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -69,6 +72,7 @@ func DelayWhen[T, R any](delayDurationSelector func(value T, index int) Observab
 	}
 }
 
+// WithTimeInterval adds the time interval since the last emission to the emitted value.
 func WithTimeInterval[T any]() OperatorFunc[T, TimeInterval[T]] {
 	return func(input Observable[T]) Observable[TimeInterval[T]] {
 		return (ObservableFunc[TimeInterval[T]])(func(yield func(TimeInterval[T], error) bool) {
@@ -87,6 +91,7 @@ func WithTimeInterval[T any]() OperatorFunc[T, TimeInterval[T]] {
 	}
 }
 
+// WithTimestamp attaches a timestamp to each item emitted by an observable indicating when it was emitted.
 func WithTimestamp[T any]() OperatorFunc[T, Timestamp[T]] {
 	return func(input Observable[T]) Observable[Timestamp[T]] {
 		return (ObservableFunc[Timestamp[T]])(func(yield func(Timestamp[T], error) bool) {
@@ -104,6 +109,7 @@ func WithTimestamp[T any]() OperatorFunc[T, Timestamp[T]] {
 	}
 }
 
+// Timeout errors if the Observable does not emit a value within a specified time.
 func Timeout[T any](duration time.Duration) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -167,6 +173,7 @@ func Timeout[T any](duration time.Duration) OperatorFunc[T, T] {
 	}
 }
 
+// ToSlice collects all values from the source Observable into a slice.
 func ToSlice[T any]() OperatorFunc[T, []T] {
 	return func(input Observable[T]) Observable[[]T] {
 		return (ObservableFunc[[]T])(func(yield func([]T, error) bool) {

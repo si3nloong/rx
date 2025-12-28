@@ -1,5 +1,6 @@
 package rx
 
+// Count counts the number of emissions on the source and emits that number when the source completes.
 func Count[T Number](predicate ...func(value T, index int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -35,6 +36,7 @@ func Count[T Number](predicate ...func(value T, index int) bool) OperatorFunc[T,
 	}
 }
 
+// Min emits the item from the source Observable that had the minimum value.
 func Min[T Number]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -52,6 +54,7 @@ func Min[T Number]() OperatorFunc[T, T] {
 	}
 }
 
+// Max emits the item from the source Observable that had the maximum value.
 func Max[T Number]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -69,6 +72,7 @@ func Max[T Number]() OperatorFunc[T, T] {
 	}
 }
 
+// Reduce applies an accumulator function over the source Observable, and returns the accumulated result when the source completes, given an optional seed value.
 func Reduce[V, A any](accumulator func(acc A, value V, index int) A, seed A) OperatorFunc[V, A] {
 	return func(input Observable[V]) Observable[A] {
 		return (ObservableFunc[A])(func(yield func(A, error) bool) {

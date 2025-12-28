@@ -10,6 +10,7 @@ import (
 	"github.com/si3nloong/rx/internal/errgroup"
 )
 
+// CombineLatest combines multiple Observables to create an Observable whose values are calculated from the latest values of each of its input Observables.
 func CombineLatest[T any](inputs ...Observable[T]) Observable[[]T] {
 	if len(inputs) < 2 {
 		panic(`CombineLatest required at least 2 observable`)
@@ -77,6 +78,7 @@ func CombineLatest[T any](inputs ...Observable[T]) Observable[[]T] {
 	})
 }
 
+// Concat concatenates multiple Observables together by subscribing to them one at a time.
 func Concat[T any](inputs ...Observable[T]) Observable[T] {
 	if len(inputs) < 2 {
 		panic(`Concat required at least 2 observable`)
@@ -100,7 +102,7 @@ func Concat[T any](inputs ...Observable[T]) Observable[T] {
 	})
 }
 
-// Wait for Observables to complete and then combine last values they emitted; complete immediately if an empty array is passed.
+// ForkJoin wait for Observables to complete and then combine last values they emitted; complete immediately if an empty array is passed.
 func ForkJoin[T any](inputs ...Observable[T]) Observable[[]T] {
 	if len(inputs) < 2 {
 		panic(`ForkJoin required at least 2 observable`)
@@ -154,6 +156,7 @@ func ForkJoin[T any](inputs ...Observable[T]) Observable[[]T] {
 	})
 }
 
+// Merge creates an output Observable which concurrently emits all values from every given input Observable.
 func Merge[T any](inputs ...Observable[T]) Observable[T] {
 	if len(inputs) < 2 {
 		panic(`Merge required at least 2 observable`)
@@ -203,6 +206,7 @@ func Merge[T any](inputs ...Observable[T]) Observable[T] {
 	})
 }
 
+// Race returns an Observable that mirrors the first source Observable to emit an item.
 func Race[T any](inputs ...Observable[T]) Observable[T] {
 	if len(inputs) < 2 {
 		panic(`Race required at least 2 observable`)

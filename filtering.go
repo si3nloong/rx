@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// AuditTime ignores values from the source Observable for a duration, then emits the most recent value.
 func AuditTime[T any](duration time.Duration) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -43,6 +44,7 @@ func AuditTime[T any](duration time.Duration) OperatorFunc[T, T] {
 	}
 }
 
+// DebounceTime discards emitted values that take less than the specified time between output.
 func DebounceTime[T any](duration time.Duration) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -78,6 +80,7 @@ func DebounceTime[T any](duration time.Duration) OperatorFunc[T, T] {
 	}
 }
 
+// Distinct suppresses duplicate items emitted by the source Observable.
 func Distinct[T any, K comparable](keySelector func(value T) K) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -107,6 +110,7 @@ func Distinct[T any, K comparable](keySelector func(value T) K) OperatorFunc[T, 
 	}
 }
 
+// DistinctUntilChanged suppresses consecutive duplicate items emitted by the source Observable.
 func DistinctUntilChanged[T any](comparator ...func(prev, curr T) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -155,6 +159,7 @@ func DistinctUntilChanged[T any](comparator ...func(prev, curr T) bool) Operator
 	}
 }
 
+// ElementAt emits the single value at the specified index in a sequence of emissions from the source Observable.
 func ElementAt[T any](index int, defaultValue ...T) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -181,6 +186,7 @@ func ElementAt[T any](index int, defaultValue ...T) OperatorFunc[T, T] {
 	}
 }
 
+// Filter emits only those items from an Observable that pass a predicate test.
 func Filter[T any](fn func(v T) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -200,6 +206,7 @@ func Filter[T any](fn func(v T) bool) OperatorFunc[T, T] {
 	}
 }
 
+// FilterErr is similar to Filter but also stops if the predicate returns an error.
 func FilterErr[T any](fn func(v T) (bool, error)) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -223,6 +230,7 @@ func FilterErr[T any](fn func(v T) (bool, error)) OperatorFunc[T, T] {
 	}
 }
 
+// First emits only the first item (or the first item that meets a condition) emitted by an Observable.
 func First[T any]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -242,6 +250,7 @@ func First[T any]() OperatorFunc[T, T] {
 	}
 }
 
+// IgnoreElements ignores the values from the source Observable and only emits the completion or error signal.
 func IgnoreElements[T any]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -256,6 +265,7 @@ func IgnoreElements[T any]() OperatorFunc[T, T] {
 	}
 }
 
+// Last emits only the last item emitted by an Observable.
 func Last[T any]() OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -315,6 +325,7 @@ func SampleTime[T any](duration time.Duration) OperatorFunc[T, T] {
 	}
 }
 
+// Single emits a single item from the source Observable and then completes, or errors if the Observable is empty or emits more than one item.
 func Single[T any](predicate func(T, int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -350,6 +361,7 @@ func Single[T any](predicate func(T, int) bool) OperatorFunc[T, T] {
 	}
 }
 
+// ThrottleTime emits a value from the source Observable, then ignores subsequent values for duration, then repeats this process.
 func ThrottleTime[T any](duration time.Duration) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {

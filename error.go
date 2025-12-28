@@ -4,6 +4,7 @@ import (
 	"iter"
 )
 
+// CatchError catches errors on the source Observable and returns a new Observable or the same Observable.
 func CatchError[T any](selector func(error) Observable[T]) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -48,6 +49,7 @@ func CatchError[T any](selector func(error) Observable[T]) OperatorFunc[T, T] {
 	}
 }
 
+// CatchError2 is similar to CatchError but returns an Either type.
 func CatchError2[I, O any](selector func(error) Observable[O]) OperatorFunc[I, Either[I, O]] {
 	return func(input Observable[I]) Observable[Either[I, O]] {
 		return (ObservableFunc[Either[I, O]])(func(yield func(Either[I, O], error) bool) {
@@ -90,6 +92,7 @@ func CatchError2[I, O any](selector func(error) Observable[O]) OperatorFunc[I, E
 	}
 }
 
+// Retry resubscribes to the source Observable a specified number of times if it signals an error.
 func Retry[T any](count int) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -125,6 +128,7 @@ func Retry[T any](count int) OperatorFunc[T, T] {
 	}
 }
 
+// ThrowIfEmpty returns an error if the source Observable completes without emitting any value.
 func ThrowIfEmpty[T comparable](fn ...func() error) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {

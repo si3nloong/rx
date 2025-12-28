@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-// Emits only the first count values emitted by the source Observable.
+// Take emits only the first count values emitted by the source Observable.
 func Take[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -31,7 +31,7 @@ func Take[T any](count uint) OperatorFunc[T, T] {
 	}
 }
 
-// Waits for the source to complete, then emits the last N values from the source, as specified by the count argument.
+// TakeLast waits for the source to complete, then emits the last N values from the source, as specified by the count argument.
 func TakeLast[T any](count uint) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -59,7 +59,7 @@ func TakeLast[T any](count uint) OperatorFunc[T, T] {
 	}
 }
 
-// Emits values emitted by the source Observable so long as each value satisfies the given predicate, and then completes as soon as this predicate is not satisfied.
+// TakeWhile emits values emitted by the source Observable so long as each value satisfies the given predicate, and then completes as soon as this predicate is not satisfied.
 func TakeWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -83,7 +83,7 @@ func TakeWhile[T any](fn func(T, int) bool) OperatorFunc[T, T] {
 	}
 }
 
-// Emits the values emitted by the source Observable until a notifier Observable emits a value.
+// TakeUntil emits the values emitted by the source Observable until a notifier Observable emits a value.
 func TakeUntil[T, U any](notifier Observable[U]) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {

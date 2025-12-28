@@ -1,5 +1,6 @@
 package rx
 
+// DefaultIfEmpty emits a default value if the source Observable completes without emitting any value.
 func DefaultIfEmpty[T any](defaultValue T) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -24,6 +25,7 @@ func DefaultIfEmpty[T any](defaultValue T) OperatorFunc[T, T] {
 	}
 }
 
+// Every returns an Observable that emits true or false to the Observer.
 func Every[T any](predicate func(T, int) bool) OperatorFunc[T, bool] {
 	return func(input Observable[T]) Observable[bool] {
 		return (ObservableFunc[bool])(func(yield func(bool, error) bool) {
@@ -42,6 +44,7 @@ func Every[T any](predicate func(T, int) bool) OperatorFunc[T, bool] {
 	}
 }
 
+// Find emits only the first value emitted by the source Observable that meets some condition.
 func Find[T any](predicate func(T, int) bool) OperatorFunc[T, T] {
 	return func(input Observable[T]) Observable[T] {
 		return (ObservableFunc[T])(func(yield func(T, error) bool) {
@@ -64,6 +67,7 @@ func Find[T any](predicate func(T, int) bool) OperatorFunc[T, T] {
 	}
 }
 
+// FindIndex emits only the index of the first value emitted by the source Observable that meets some condition.
 func FindIndex[T any](predicate func(T, int) bool) OperatorFunc[T, int] {
 	return func(input Observable[T]) Observable[int] {
 		return (ObservableFunc[int])(func(yield func(int, error) bool) {
@@ -85,6 +89,7 @@ func FindIndex[T any](predicate func(T, int) bool) OperatorFunc[T, int] {
 	}
 }
 
+// IsEmpty returns an Observable that emits true if the source Observable is empty, otherwise false.
 func IsEmpty[T any]() OperatorFunc[T, bool] {
 	return func(input Observable[T]) Observable[bool] {
 		return (ObservableFunc[bool])(func(yield func(bool, error) bool) {

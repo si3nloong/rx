@@ -4,8 +4,13 @@ import (
 	"iter"
 )
 
+// ObservableFunc is a function type that implements the Observable interface.
+// It allows casting a function matching iter.Seq2 signature to an Observable.
 type ObservableFunc[T any] iter.Seq2[T, error]
 
+// All returns an iterator over the elements of the Observable.
+// It yields values until an error occurs or the Observable completes.
+// If an error occurs, it yields the zero value of T and stops.
 func (fn ObservableFunc[T]) All() iter.Seq[T] {
 	return func(yield func(T) bool) {
 		for v, err := range (iter.Seq2[T, error])(fn) {
@@ -22,10 +27,16 @@ func (fn ObservableFunc[T]) All() iter.Seq[T] {
 	}
 }
 
+// Subscribe returns an iterator that yields values and errors from the Observable.
+// It delegates to the underlying iter.Seq2 function.
 func (fn ObservableFunc[T]) Subscribe() iter.Seq2[T, error] {
 	return (iter.Seq2[T, error])(fn)
 }
 
+// SubscribeOn subscribes to the Observable and executes the provided callbacks for each event.
+// onNext is called for each value emitted.
+// onError is called if an error occurs.
+// onComplete is called when the Observable completes successfully.
 func (fn ObservableFunc[T]) SubscribeOn(onNext func(v T), onError func(err error), onComplete func()) {
 	next, stop := iter.Pull2((iter.Seq2[T, error])(fn))
 	defer stop()
@@ -43,6 +54,14 @@ func (fn ObservableFunc[T]) SubscribeOn(onNext func(v T), onError func(err error
 	}
 }
 
+// Pipe1 pipes the input Observable through 1 operator function.
+//
+// Example:
+//
+//	rx.Pipe1(
+//		rx.Of(1, 2, 3),
+//		rx.Map(func(i int, _ int) int { return i * 2 }),
+//	)
 func Pipe1[I, O1 any](
 	input Observable[I],
 	f1 OperatorFunc[I, O1],
@@ -50,6 +69,15 @@ func Pipe1[I, O1 any](
 	return Observable[O1](f1(input))
 }
 
+// Pipe2 pipes the input Observable through 2 operator functions.
+//
+// Example:
+//
+//	rx.Pipe2(
+//		rx.Of(1, 2, 3),
+//		rx.Map(func(i int, _ int) int { return i * 2 }),
+//		rx.Filter(func(i int) bool { return i > 2 }),
+//	)
 func Pipe2[I, O1, O2 any](
 	input Observable[I],
 	f1 OperatorFunc[I, O1],
@@ -58,6 +86,7 @@ func Pipe2[I, O1, O2 any](
 	return Observable[O2](f2(f1(input)))
 }
 
+// Pipe3 pipes the input Observable through 3 operator functions.
 func Pipe3[I, O1, O2, O3 any](
 	input Observable[I],
 	f1 OperatorFunc[I, O1],
@@ -67,6 +96,7 @@ func Pipe3[I, O1, O2, O3 any](
 	return Observable[O3](f3(f2(f1(input))))
 }
 
+// Pipe4 pipes the input Observable through 4 operator functions.
 func Pipe4[I, O1, O2, O3, O4 any](
 	input Observable[I],
 	f1 OperatorFunc[I, O1],
@@ -77,6 +107,7 @@ func Pipe4[I, O1, O2, O3, O4 any](
 	return Observable[O4](f4(f3(f2(f1(input)))))
 }
 
+// Pipe5 pipes the input Observable through 5 operator functions.
 func Pipe5[I, O1, O2, O3, O4, O5 any](
 	input Observable[I],
 	f1 OperatorFunc[I, O1],
@@ -88,6 +119,7 @@ func Pipe5[I, O1, O2, O3, O4, O5 any](
 	return Observable[O5](f5(f4(f3(f2(f1(input))))))
 }
 
+// Pipe6 pipes the input Observable through 6 operator functions.
 func Pipe6[I, O1, O2, O3, O4, O5, O6 any](
 	input Observable[I],
 	f1 OperatorFunc[I, O1],
@@ -100,6 +132,7 @@ func Pipe6[I, O1, O2, O3, O4, O5, O6 any](
 	return Observable[O6](f6(f5(f4(f3(f2(f1(input)))))))
 }
 
+// Pipe7 pipes the input Observable through 7 operator functions.
 func Pipe7[I, O1, O2, O3, O4, O5, O6, O7 any](
 	input Observable[I],
 	f1 OperatorFunc[I, O1],
@@ -113,6 +146,7 @@ func Pipe7[I, O1, O2, O3, O4, O5, O6, O7 any](
 	return Observable[O7](f7(f6(f5(f4(f3(f2(f1(input))))))))
 }
 
+// Pipe8 pipes the input Observable through 8 operator functions.
 func Pipe8[I, O1, O2, O3, O4, O5, O6, O7, O8 any](
 	input Observable[I],
 	f1 OperatorFunc[I, O1],
@@ -127,6 +161,7 @@ func Pipe8[I, O1, O2, O3, O4, O5, O6, O7, O8 any](
 	return Observable[O8](f8(f7(f6(f5(f4(f3(f2(f1(input)))))))))
 }
 
+// Pipe9 pipes the input Observable through 9 operator functions.
 func Pipe9[I, O1, O2, O3, O4, O5, O6, O7, O8, O9 any](
 	input Observable[I],
 	f1 OperatorFunc[I, O1],
@@ -142,6 +177,7 @@ func Pipe9[I, O1, O2, O3, O4, O5, O6, O7, O8, O9 any](
 	return Observable[O9](f9(f8(f7(f6(f5(f4(f3(f2(f1(input))))))))))
 }
 
+// Pipe10 pipes the input Observable through 10 operator functions.
 func Pipe10[I, O1, O2, O3, O4, O5, O6, O7, O8, O9, O10 any](
 	input Observable[I],
 	f1 OperatorFunc[I, O1],
